@@ -112,7 +112,6 @@ class Client(url: String, private val username: String, private val password: St
         IO.setDefaultOkHttpCallFactory(okHttpClient)
 
         val options = IO.Options()
-        options.forceNew = true
         options.callFactory = okHttpClient
         options.path = "/socket.io"
         options.query =
