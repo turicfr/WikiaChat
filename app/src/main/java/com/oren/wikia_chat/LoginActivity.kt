@@ -4,8 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.textfield.TextInputLayout
 import io.socket.client.Manager
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
@@ -13,10 +13,9 @@ import io.socket.engineio.client.transports.PollingXHR
 import java.util.logging.Level
 import java.util.logging.Logger
 
-
 class LoginActivity : AppCompatActivity() {
-    private lateinit var mUsernameView: TextView
-    private lateinit var mPasswordView: TextView
+    private lateinit var mUsernameView: TextInputLayout
+    private lateinit var mPasswordView: TextInputLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,8 +39,8 @@ class LoginActivity : AppCompatActivity() {
         mUsernameView.error = null
         mPasswordView.error = null
 
-        val username = mUsernameView.text.toString()
-        val password = mPasswordView.text.toString()
+        val username = mUsernameView.editText?.text.toString()
+        val password = mPasswordView.editText?.text.toString()
 
         if (username == "") {
             mUsernameView.error = getString(R.string.error_field_required)
