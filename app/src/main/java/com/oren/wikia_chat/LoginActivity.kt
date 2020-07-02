@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputLayout
 import io.socket.client.Manager
 import io.socket.client.Socket
-import io.socket.emitter.Emitter
 import io.socket.engineio.client.transports.PollingXHR
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -52,7 +51,11 @@ class LoginActivity : AppCompatActivity() {
         app.client = Client("https://vintagepenguin.fandom.com", username, password)
         app.client.login(object : Client.LoginCallback {
             override fun onSuccess() {
-                app.client.socket.on(Socket.EVENT_CONNECT, onConnect)
+                app.client.socket.on(Socket.EVENT_CONNECT) {
+                    Log.d("Chat", "connect")
+                    setResult(RESULT_OK, Intent())
+                    finish()
+                }
                 app.client.socket.on(Socket.EVENT_DISCONNECT) {
                     Log.d("Chat", "disconnect")
                 }
@@ -81,22 +84,5 @@ class LoginActivity : AppCompatActivity() {
                 throwable.printStackTrace()
             }
         })
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        val app = application as ChatApplication
-        app.client.socket.disconnect()
-        app.client.socket.off(Socket.EVENT_CONNECT, onConnect)
-        app.client.socket.off(Socket.EVENT_DISCONNECT)
-        app.client.socket.off(Socket.EVENT_CONNECT_ERROR)
-        app.client.socket.off(Socket.EVENT_CONNECT_TIMEOUT)
-    }
-
-    private val onConnect = Emitter.Listener {
-        Log.d("Chat", "connect")
-        setResult(RESULT_OK, Intent())
-        finish()
     }
 }

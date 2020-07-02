@@ -22,7 +22,7 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
-class Client(url: String, private val username: String, private val password: String) {
+class Client(url: String, val username: String, private val password: String) {
     private var api: LoginApi
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
@@ -112,13 +112,14 @@ class Client(url: String, private val username: String, private val password: St
         IO.setDefaultOkHttpCallFactory(okHttpClient)
 
         val options = IO.Options()
-        options.callFactory = okHttpClient
-        options.path = "/socket.io"
-        options.query =
-            "name=${username}" +
-            "&key=${wikiaData.getString("chatkey")}" +
-            "&roomId=${wikiaData.getString("roomId")}" +
-            "&serverId=${siteInfo.getJSONObject("query").getJSONObject("wikidesc").getString("id")}"
+        options.apply {
+            callFactory = okHttpClient
+            path = "/socket.io"
+            query = "name=${username}" +
+                    "&key=${wikiaData.getString("chatkey")}" +
+                    "&roomId=${wikiaData.getString("roomId")}" +
+                    "&serverId=${siteInfo.getJSONObject("query").getJSONObject("wikidesc").getString("id")}"
+        }
         socket = IO.socket("https://${wikiaData.getString("chatServerHost")}", options)
     }
 
