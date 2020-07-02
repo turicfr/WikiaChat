@@ -5,4 +5,6 @@
     <string name="password">Password</string>
     <string name="error_field_required">This field is required</string>
     <string name="message_prompt">Type a message</string>
+    <string name="message_user_joined">%s has joined</string>
+    <string name="message_user_left">%s has left</string>
 </resources>
