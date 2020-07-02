@@ -71,11 +71,11 @@ class LoginActivity : AppCompatActivity() {
             override fun onFailure(throwable: Throwable) {
                 when (throwable.message) {
                     "NotExists" -> {
-                        mUsernameView.error = "User does not exist"
+                        mUsernameView.error = getString(R.string.user_does_not_exist)
                         mUsernameView.requestFocus()
                     }
                     "WrongPass" -> {
-                        mPasswordView.error = "Wrong password"
+                        mPasswordView.error = getString(R.string.wrong_password)
                         mPasswordView.requestFocus()
                     }
                 }
