@@ -55,7 +55,7 @@ class MainFragment : Fragment() {
         mInputMessageView.setOnEditorActionListener { v, actionId, event ->
             return@setOnEditorActionListener when (actionId) {
                 EditorInfo.IME_ACTION_SEND -> {
-                    sendMessage(mInputMessageView.text.toString())
+                    sendMessage()
                     true
                 }
                 else -> false
@@ -64,7 +64,7 @@ class MainFragment : Fragment() {
 
         val sendButton: ImageButton = view.findViewById(R.id.send_button)
         sendButton.setOnClickListener {
-            sendMessage(mInputMessageView.text.toString())
+            sendMessage()
         }
     }
 
@@ -120,12 +120,13 @@ class MainFragment : Fragment() {
         mSocket.send(root.toString())
     }
 
-    private fun sendMessage(message: String) {
+    private fun sendMessage() {
         send(JSONObject().apply {
             put("msgType", "chat")
             put("name", mUsername)
-            put("text", message)
+            put("text", mInputMessageView.text.toString())
         })
+        mInputMessageView.text.clear()
     }
 
     private val onEvent = Emitter.Listener { args ->
