@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-
+import java.lang.Exception
 import kotlin.math.abs
 
 class MessageAdapter(
@@ -16,11 +16,11 @@ class MessageAdapter(
     private val mUsernameColors: IntArray = context.resources.getIntArray(R.array.username_colors)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        var layout = -1
-        when (viewType) {
-            Message.TYPE_MESSAGE -> layout = R.layout.item_message
-            Message.TYPE_LOG -> layout = R.layout.item_log
-            Message.TYPE_ACTION -> layout = R.layout.item_action
+        val layout = when (viewType) {
+            Message.TYPE_MESSAGE -> R.layout.item_message
+            Message.TYPE_LOG -> R.layout.item_log
+            Message.TYPE_ACTION -> R.layout.item_action
+            else -> -1
         }
         return ViewHolder(
             LayoutInflater

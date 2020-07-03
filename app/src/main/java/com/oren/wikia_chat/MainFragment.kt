@@ -111,13 +111,10 @@ class MainFragment : Fragment() {
     }
 
     private fun send(attrs: JSONObject) {
-        val root = JSONObject().apply {
+        mSocket.send(JSONObject().apply {
             put("id", JSONObject.NULL)
             put("attrs", attrs)
-        }
-        Log.d("Chat", "send -> $root")
-        // TODO: is toString needed?
-        mSocket.send(root.toString())
+        }.toString())
     }
 
     private fun sendMessage() {
