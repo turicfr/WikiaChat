@@ -15,17 +15,17 @@ import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mMessagesView: RecyclerView
-    private lateinit var mAdapter: RecyclerView.Adapter<MessageAdapter.ViewHolder>
-    private var mMessages = ArrayList<Message>()
+    private lateinit var mAdapter: ChatAdapter
+    private var mChatItems = ArrayList<ChatItem>()
     private lateinit var mInputMessageView: EditText
     private var mUsername: String? = null
-    private lateinit var mSocket: Socket
+    private lateinit var mClient: Client
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mAdapter = MessageAdapter(this, mMessages)
+        mAdapter = ChatAdapter(this, mChatItems)
         mMessagesView = findViewById(R.id.messages)
         mMessagesView.apply {
             setHasFixedSize(true)
@@ -44,8 +44,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val sendButton: ImageButton = findViewById(R.id.send_button)
-        sendButton.setOnClickListener {
+        findViewById<ImageButton>(R.id.send_button).setOnClickListener {
             sendMessage()
         }
 
@@ -56,37 +55,30 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         val app = application as ChatApplication
-        mUsername = app.client.username
-        mSocket = app.client.socket
-        mSocket.on("message", onEvent)
+        mClient = app.client
+        mUsername = mClient.username
+        mClient.socket.on("message", onEvent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        mSocket.disconnect()
-        mSocket.off(Socket.EVENT_CONNECT)
-        mSocket.off(Socket.EVENT_DISCONNECT)
-        mSocket.off(Socket.EVENT_CONNECT_ERROR)
-        mSocket.off(Socket.EVENT_CONNECT_TIMEOUT)
+        mClient.socket.disconnect()
+        mClient.socket.off(Socket.EVENT_CONNECT)
+        mClient.socket.off(Socket.EVENT_DISCONNECT)
+        mClient.socket.off(Socket.EVENT_CONNECT_ERROR)
+        mClient.socket.off(Socket.EVENT_CONNECT_TIMEOUT)
     }
 
     private fun addMessage(username: String, message: String) {
-        mMessages.add(Message.Builder(Message.TYPE_MESSAGE)
-            .username(username)
-            .message(message)
-            .build()
-        )
-        mAdapter.notifyItemInserted(mMessages.size - 1)
+        mChatItems.add(ChatItem.Message(username, message))
+        mAdapter.notifyItemInserted(mChatItems.size - 1)
         scrollToBottom()
     }
 
     private fun addLog(message: String) {
-        mMessages.add(Message.Builder(Message.TYPE_LOG)
-            .message(message)
-            .build()
-        )
-        mAdapter.notifyItemChanged(mMessages.size - 1)
+        mChatItems.add(ChatItem.Log(message))
+        mAdapter.notifyItemChanged(mChatItems.size - 1)
         scrollToBottom()
     }
 
@@ -95,7 +87,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun send(attrs: JSONObject) {
-        mSocket.send(JSONObject().apply {
+        mClient.socket.send(JSONObject().apply {
             put("id", JSONObject.NULL)
             put("attrs", attrs)
         }.toString())
