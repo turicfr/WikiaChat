@@ -18,8 +18,7 @@ class LoginActivity : AppCompatActivity() {
 
         mUsernameView = findViewById(R.id.username)
         mPasswordView = findViewById(R.id.password)
-        val loginButton: Button = findViewById(R.id.sign_in_button)
-        loginButton.setOnClickListener {
+        findViewById<Button>(R.id.sign_in_button).setOnClickListener {
             attemptLogin()
         }
     }
@@ -34,6 +33,11 @@ class LoginActivity : AppCompatActivity() {
         if (username == "") {
             mUsernameView.error = getString(R.string.error_field_required)
             mUsernameView.requestFocus()
+            return
+        }
+        if (password == "") {
+            mPasswordView.error = getString(R.string.error_field_required)
+            mPasswordView.requestFocus()
             return
         }
 
