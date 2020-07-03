@@ -6,11 +6,7 @@ import android.util.Log
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputLayout
-import io.socket.client.Manager
 import io.socket.client.Socket
-import io.socket.engineio.client.transports.PollingXHR
-import java.util.logging.Level
-import java.util.logging.Logger
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mUsernameView: TextInputLayout
@@ -19,12 +15,6 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-
-        AndroidLoggingHandler.reset(AndroidLoggingHandler())
-        Logger.getLogger(Socket::class.java.name).level = Level.ALL
-        Logger.getLogger(io.socket.engineio.client.Socket::class.java.name).level = Level.ALL
-        Logger.getLogger(Manager::class.java.name).level = Level.ALL
-        Logger.getLogger(PollingXHR::class.java.name).level = Level.ALL
 
         mUsernameView = findViewById(R.id.username)
         mPasswordView = findViewById(R.id.password)
