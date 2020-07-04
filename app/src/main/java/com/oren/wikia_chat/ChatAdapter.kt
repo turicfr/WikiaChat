@@ -4,8 +4,10 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import kotlin.math.abs
 
 class ChatAdapter(private val mContext: Context, private val mChatItems: List<ChatItem>) :
@@ -33,8 +35,9 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
             ChatItem.TYPE_MESSAGE -> {
                 message as ChatItem.Message
                 viewHolder as MessageViewHolder
-                viewHolder.message = message.message
                 viewHolder.username = message.username
+                viewHolder.message = message.messages.joinToString("\n")
+                Picasso.get().load(message.avatarSrc).into(viewHolder.avatar)
             }
             ChatItem.TYPE_LOG -> {
                 message as ChatItem.Log
@@ -63,6 +66,7 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mUsernameView = itemView.findViewById<TextView>(R.id.username)
         private val mMessageView = itemView.findViewById<TextView>(R.id.message)
+        val avatar = itemView.findViewById<ImageView>(R.id.avatar)
 
         var username: String
             get() = mUsernameView.text.toString()

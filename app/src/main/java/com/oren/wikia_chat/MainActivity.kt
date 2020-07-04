@@ -1,6 +1,7 @@
 package com.oren.wikia_chat
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -103,12 +104,6 @@ class MainActivity : AppCompatActivity() {
         startLogin()
     }
 
-    private fun addMessage(username: String, message: String) {
-        mChatItems.add(ChatItem.Message(username, message))
-        mAdapter.notifyItemInserted(mChatItems.size - 1)
-        scrollToBottom()
-    }
-
     private fun addLog(message: String) {
         mChatItems.add(ChatItem.Log(message))
         mAdapter.notifyItemChanged(mChatItems.size - 1)
@@ -129,9 +124,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onMessage(data: JSONObject) {
-        val username = data.getJSONObject("attrs").getString("name")
-        val message = data.getJSONObject("attrs").getString("text")
-        addMessage(username, message)
+        val attrs = data.getJSONObject("attrs")
+        val username = attrs.getString("name")
+        val message = attrs.getString("text")
+        val last = mChatItems.last()
+        if (last is ChatItem.Message && last.username == username) {
+            last.messages.add(message)
+            mAdapter.notifyItemChanged(mChatItems.size - 1)
+        } else {
+            val avatarSrc = Uri.parse(attrs.getString("avatarSrc"))
+            val segments = avatarSrc.pathSegments.slice(0 until avatarSrc.pathSegments.size - 2)
+            val newUri = avatarSrc.buildUpon().path(segments.joinToString("/")).build()
+            mChatItems.add(ChatItem.Message(username, mutableListOf(message), newUri.toString()))
+            mAdapter.notifyItemInserted(mChatItems.size - 1)
+        }
+        scrollToBottom()
     }
 
     private fun onBan(data: JSONObject) {

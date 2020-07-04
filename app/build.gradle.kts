@@ -49,6 +49,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.7.2")
     implementation("com.squareup.okhttp3:logging-interceptor:4.7.2")
     implementation("com.squareup.okhttp3:okhttp-urlconnection:4.4.1")
+    implementation("com.squareup.picasso:picasso:2.71828")
 
     implementation("io.socket:socket.io-client:1.0.0") {
         exclude(group = "org.json", module = "json")
