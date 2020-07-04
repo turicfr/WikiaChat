@@ -6,12 +6,12 @@ import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import io.socket.client.Socket
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var mUsernameView: TextInputEditText
-    private lateinit var mPasswordView: TextInputEditText
+    private lateinit var mUsernameView: TextInputLayout
+    private lateinit var mPasswordView: TextInputLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
             attemptLogin()
         }
 
-        mPasswordView.setOnEditorActionListener { v, actionId, event ->
+        mPasswordView.editText!!.setOnEditorActionListener { v, actionId, event ->
             return@setOnEditorActionListener when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
                     attemptLogin()
@@ -53,8 +53,8 @@ class LoginActivity : AppCompatActivity() {
         mUsernameView.error = null
         mPasswordView.error = null
 
-        val username = mUsernameView.text.toString()
-        val password = mPasswordView.text.toString()
+        val username = mUsernameView.editText!!.text.toString()
+        val password = mPasswordView.editText!!.text.toString()
 
         if (username == "") {
             mUsernameView.error = getString(R.string.error_field_required)
