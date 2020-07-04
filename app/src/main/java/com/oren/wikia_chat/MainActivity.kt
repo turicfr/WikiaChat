@@ -3,6 +3,8 @@ package com.oren.wikia_chat
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
@@ -18,7 +20,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mAdapter: ChatAdapter
     private var mChatItems = ArrayList<ChatItem>()
     private lateinit var mInputMessageView: EditText
-    private var mUsername: String? = null
     private lateinit var mClient: Client
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +49,22 @@ class MainActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        startActivityForResult(Intent(this, LoginActivity::class.java), 0)
+        startLogin()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.logout -> {
+                logout()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -56,7 +72,6 @@ class MainActivity : AppCompatActivity() {
 
         val app = application as ChatApplication
         mClient = app.client
-        mUsername = mClient.username
         mClient.socket.on("message", onEvent)
     }
 
@@ -68,6 +83,21 @@ class MainActivity : AppCompatActivity() {
         mClient.socket.off(Socket.EVENT_DISCONNECT)
         mClient.socket.off(Socket.EVENT_CONNECT_ERROR)
         mClient.socket.off(Socket.EVENT_CONNECT_TIMEOUT)
+    }
+
+    private fun startLogin() {
+        startActivityForResult(Intent(this, LoginActivity::class.java), 0)
+    }
+
+    private fun logout() {
+        val app = application as ChatApplication
+        with (app.sharedPref.edit()) {
+            remove(getString(R.string.username_key))
+            remove(getString(R.string.password_key))
+            apply()
+        }
+        mClient.socket.disconnect()
+        startLogin()
     }
 
     private fun addMessage(username: String, message: String) {
@@ -96,7 +126,7 @@ class MainActivity : AppCompatActivity() {
     private fun sendMessage() {
         send(JSONObject().apply {
             put("msgType", "chat")
-            put("name", mUsername)
+            put("name", mClient.username)
             put("text", mInputMessageView.text.toString())
         })
         mInputMessageView.text.clear()

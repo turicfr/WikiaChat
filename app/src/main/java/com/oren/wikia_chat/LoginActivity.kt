@@ -1,6 +1,5 @@
 package com.oren.wikia_chat
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -17,11 +16,11 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val username = sharedPref.getString(getString(R.string.username_key), null)
-        if (username != null) {
-            val password = sharedPref.getString(getString(R.string.password_key), null)!!
-            login(username, password) { throwable ->
+        val app = application as ChatApplication
+        val username = app.sharedPref.getString(getString(R.string.username_key), null)
+        val password = app.sharedPref.getString(getString(R.string.password_key), null)
+        if (username != null && password != null) {
+            login(username, password) {
                 show()
             }
             return
@@ -87,14 +86,13 @@ class LoginActivity : AppCompatActivity() {
         app.client = Client("https://vintagepenguin.fandom.com", username, password)
         app.client.login(object : Client.LoginCallback {
             override fun onSuccess() {
-                val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                with (sharedPref.edit()) {
-                    putString(getString(R.string.username_key), username)
-                    putString(getString(R.string.password_key), password)
-                    apply()
-                }
                 app.client.socket.on(Socket.EVENT_CONNECT) {
                     Log.d("Chat", "connect")
+                    with (app.sharedPref.edit()) {
+                        putString(getString(R.string.username_key), username)
+                        putString(getString(R.string.password_key), password)
+                        apply()
+                    }
                     setResult(RESULT_OK, Intent())
                     finish()
                 }
