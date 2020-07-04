@@ -1,5 +1,6 @@
 package com.oren.wikia_chat
 
+import android.util.Log
 import io.socket.client.IO
 import io.socket.client.Socket
 import okhttp3.ConnectionPool
@@ -24,7 +25,7 @@ class Client(url: String, val username: String, private val password: String) {
     private var api: LoginApi
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
-    lateinit var socket: Socket
+    private lateinit var socket: Socket
 
     init {
         val interceptor = HttpLoggingInterceptor()
@@ -154,5 +155,52 @@ class Client(url: String, val username: String, private val password: String) {
                 api.login(username, password, token).enqueue(checkSuccess)
             }
         })
+    }
+
+    fun connect() {
+        socket.on(Socket.EVENT_CONNECT) {
+            Log.d("Chat", "connect")
+            send(JSONObject().apply {
+                put("msgType", "command")
+                put("command", "initquery")
+            })
+        }
+        socket.on(Socket.EVENT_DISCONNECT) {
+            Log.d("Chat", "disconnect")
+        }
+        socket.on(Socket.EVENT_CONNECT_ERROR) {
+            Log.d("Chat", "connect_error")
+        }
+        socket.on(Socket.EVENT_CONNECT_TIMEOUT) {
+            Log.d("Chat", "connect_timeout")
+        }
+        socket.connect()
+    }
+
+    fun disconnect() {
+        socket.disconnect()
+
+        socket.off(Socket.EVENT_CONNECT)
+        socket.off(Socket.EVENT_DISCONNECT)
+        socket.off(Socket.EVENT_CONNECT_ERROR)
+        socket.off(Socket.EVENT_CONNECT_TIMEOUT)
+        // TODO: off "message"?
+    }
+
+    fun onEvent(event: String, handler: (data: JSONObject) -> Unit) {
+        socket.on("message") { args ->
+            val obj = args[0] as JSONObject
+            val data = JSONObject(obj.getString("data"))
+            if (obj.getString("event") == event) {
+                handler(data)
+            }
+        }
+    }
+
+    fun send(attrs: JSONObject) {
+        socket.send(JSONObject().apply {
+            put("id", JSONObject.NULL)
+            put("attrs", attrs)
+        }.toString())
     }
 }

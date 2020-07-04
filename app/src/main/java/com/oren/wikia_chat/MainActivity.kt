@@ -2,7 +2,6 @@ package com.oren.wikia_chat
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
@@ -11,8 +10,6 @@ import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import io.socket.client.Socket
-import io.socket.emitter.Emitter
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
@@ -70,19 +67,25 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        val app = application as ChatApplication
-        mClient = app.client
-        mClient.socket.on("message", onEvent)
+        mClient = (application as ChatApplication).client
+        mClient.apply {
+            onEvent("meta") {}
+            onEvent("initial") { data -> runOnUiThread { onInitial(data) } }
+            onEvent("updateUser") { data -> runOnUiThread { onUpdateUser(data) } }
+            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            connect()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        mClient.socket.disconnect()
-        mClient.socket.off(Socket.EVENT_CONNECT)
-        mClient.socket.off(Socket.EVENT_DISCONNECT)
-        mClient.socket.off(Socket.EVENT_CONNECT_ERROR)
-        mClient.socket.off(Socket.EVENT_CONNECT_TIMEOUT)
+        mClient.disconnect()
     }
 
     private fun startLogin() {
@@ -90,13 +93,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logout() {
-        val app = application as ChatApplication
-        with (app.sharedPref.edit()) {
+        val sharedPref = (application as ChatApplication).sharedPref
+        with (sharedPref.edit()) {
             remove(getString(R.string.username_key))
             remove(getString(R.string.password_key))
             apply()
         }
-        mClient.socket.disconnect()
+        mClient.disconnect()
         startLogin()
     }
 
@@ -116,39 +119,13 @@ class MainActivity : AppCompatActivity() {
         mMessagesView.scrollToPosition(mAdapter.itemCount - 1)
     }
 
-    private fun send(attrs: JSONObject) {
-        mClient.socket.send(JSONObject().apply {
-            put("id", JSONObject.NULL)
-            put("attrs", attrs)
-        }.toString())
-    }
-
     private fun sendMessage() {
-        send(JSONObject().apply {
+        mClient.send(JSONObject().apply {
             put("msgType", "chat")
             put("name", mClient.username)
             put("text", mInputMessageView.text.toString())
         })
         mInputMessageView.text.clear()
-    }
-
-    private val onEvent = Emitter.Listener { args ->
-        runOnUiThread {
-            val obj = args[0] as JSONObject
-            Log.d("Chat", "got message: $obj")
-            val data = JSONObject(obj.getString("data"))
-            when (obj.getString("event")) {
-                "meta" -> {}
-                "initial" -> onInitial()
-                "updateUser" -> onUpdateUser(data)
-                "join" -> onJoin(data)
-                "logout" -> onLogout(data)
-                "part" -> onLogout(data)
-                "kick" -> onKick(data)
-                "ban" -> onBan(data)
-                "chat:add" -> onMessage(data)
-            }
-        }
     }
 
     private fun onMessage(data: JSONObject) {
@@ -179,7 +156,7 @@ class MainActivity : AppCompatActivity() {
         // TODO
     }
 
-    private fun onInitial() {
+    private fun onInitial(data: JSONObject) {
         // TODO
     }
 }

@@ -7,7 +7,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputLayout
-import io.socket.client.Socket
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mUsernameView: TextInputLayout
@@ -16,9 +15,9 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val app = application as ChatApplication
-        val username = app.sharedPref.getString(getString(R.string.username_key), null)
-        val password = app.sharedPref.getString(getString(R.string.password_key), null)
+        val sharedPref = (application as ChatApplication).sharedPref
+        val username = sharedPref.getString(getString(R.string.username_key), null)
+        val password = sharedPref.getString(getString(R.string.password_key), null)
         if (username != null && password != null) {
             login(username, password) {
                 show()
@@ -86,26 +85,13 @@ class LoginActivity : AppCompatActivity() {
         app.client = Client("https://vintagepenguin.fandom.com", username, password)
         app.client.login(object : Client.LoginCallback {
             override fun onSuccess() {
-                app.client.socket.on(Socket.EVENT_CONNECT) {
-                    Log.d("Chat", "connect")
-                    with (app.sharedPref.edit()) {
-                        putString(getString(R.string.username_key), username)
-                        putString(getString(R.string.password_key), password)
-                        apply()
-                    }
-                    setResult(RESULT_OK, Intent())
-                    finish()
+                with (app.sharedPref.edit()) {
+                    putString(getString(R.string.username_key), username)
+                    putString(getString(R.string.password_key), password)
+                    apply()
                 }
-                app.client.socket.on(Socket.EVENT_DISCONNECT) {
-                    Log.d("Chat", "disconnect")
-                }
-                app.client.socket.on(Socket.EVENT_CONNECT_ERROR) {
-                    Log.d("Chat", "connect_error")
-                }
-                app.client.socket.on(Socket.EVENT_CONNECT_TIMEOUT) {
-                    Log.d("Chat", "connect_timeout")
-                }
-                app.client.socket.connect()
+                setResult(RESULT_OK, Intent())
+                finish()
             }
 
             override fun onFailure(throwable: Throwable) {
