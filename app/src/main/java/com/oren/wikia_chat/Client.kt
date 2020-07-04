@@ -26,6 +26,7 @@ class Client(url: String, val username: String, private val password: String) {
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
     private lateinit var socket: Socket
+    val users = mutableMapOf<String, User>()
 
     init {
         val interceptor = HttpLoggingInterceptor()
@@ -174,7 +175,29 @@ class Client(url: String, val username: String, private val password: String) {
         socket.on(Socket.EVENT_CONNECT_TIMEOUT) {
             Log.d("Chat", "connect_timeout")
         }
+        onEvent("initial") { data ->
+            val models = data
+                .getJSONObject("collections")
+                .getJSONObject("users")
+                .getJSONArray("models")
+            for (i in 0 until models.length()) {
+                val user = models.getJSONObject(i)
+                updateUser(user.getJSONObject("attrs"))
+            }
+        }
+        onEvent("updateUser") { data ->
+            updateUser(data.getJSONObject("attrs"))
+        }
         socket.connect()
+    }
+
+    private fun updateUser(attrs: JSONObject) {
+        // TODO: Rank, avatarSrc?
+        val username = attrs.getString("name")
+        users[username.toLowerCase()] = User(
+            username
+            // attrs.getString("avatarSrc")
+        )
     }
 
     fun disconnect() {

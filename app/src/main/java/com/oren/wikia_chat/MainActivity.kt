@@ -61,6 +61,10 @@ class MainActivity : AppCompatActivity() {
                 logout()
                 true
             }
+            R.id.participants -> {
+                // TODO
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -71,8 +75,6 @@ class MainActivity : AppCompatActivity() {
         mClient = (application as ChatApplication).client
         mClient.apply {
             onEvent("meta") {}
-            onEvent("initial") { data -> runOnUiThread { onInitial(data) } }
-            onEvent("updateUser") { data -> runOnUiThread { onUpdateUser(data) } }
             onEvent("join") { data -> runOnUiThread { onJoin(data) } }
             onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
             onEvent("part") { data -> runOnUiThread { onLogout(data) } }
@@ -157,13 +159,5 @@ class MainActivity : AppCompatActivity() {
     private fun onJoin(data: JSONObject) {
         val username = data.getJSONObject("attrs").getString("name")
         addLog(resources.getString(R.string.message_user_joined, username));
-    }
-
-    private fun onUpdateUser(data: JSONObject) {
-        // TODO
-    }
-
-    private fun onInitial(data: JSONObject) {
-        // TODO
     }
 }
