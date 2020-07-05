@@ -26,7 +26,7 @@ class Client(url: String, val username: String, private val password: String) {
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
     private lateinit var socket: Socket
-    val users = mutableMapOf<String, User>()
+    private val users = mutableMapOf<String, User>()
 
     init {
         val interceptor = HttpLoggingInterceptor()
