@@ -11,6 +11,6 @@ class ChatApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
     }
 }

@@ -146,7 +146,7 @@ class ChatActivity : AppCompatActivity() {
 
     private fun onJoin(data: JSONObject) {
         val username = data.getJSONObject("attrs").getString("name")
-        addLog(resources.getString(R.string.message_user_joined, username));
+        addLog(resources.getString(R.string.message_user_joined, username))
     }
 
     private fun onUpdateUser(data: JSONObject) {
