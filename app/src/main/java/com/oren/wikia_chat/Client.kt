@@ -21,25 +21,11 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
-class Client(url: String, val username: String, private val password: String) {
-    private var api: LoginApi
+class Client(val username: String, private val password: String) {
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
+    private lateinit var client: OkHttpClient
     private lateinit var socket: Socket
-
-    init {
-        val interceptor = HttpLoggingInterceptor()
-        val cookieHandler = CookieManager()
-        val client = OkHttpClient.Builder()
-            .addNetworkInterceptor(interceptor)
-            .cookieJar(JavaNetCookieJar(cookieHandler))
-            .build()
-        val retrofit = Retrofit.Builder()
-            .baseUrl(url)
-            .client(client)
-            .build()
-        api = retrofit.create(LoginApi::class.java)
-    }
 
     interface LoginCallback {
         fun onSuccess()
@@ -119,6 +105,34 @@ class Client(url: String, val username: String, private val password: String) {
     }
 
     fun login(callback: LoginCallback) {
+        client = OkHttpClient.Builder()
+            .addNetworkInterceptor(HttpLoggingInterceptor())
+            .cookieJar(JavaNetCookieJar(CookieManager()))
+            .build()
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://services.fandom.com/")
+            .client(client)
+            .build()
+        val loginApi = retrofit.create(LoginApi::class.java)
+
+        loginApi.login(username, password).enqueue(object : ObjectCallback(callback) {
+            override fun onObject(obj: JSONObject) {
+                if (obj.has("error")) {
+                    // TODO: handle errors
+                    return
+                }
+                callback.onSuccess()
+            }
+        })
+    }
+
+    fun init(url: String, callback: LoginCallback) {
+        val retrofit = Retrofit.Builder()
+            .baseUrl(url)
+            .client(client)
+            .build()
+        val wikiaApi = retrofit.create(WikiaApi::class.java)
+
         val siteInfoCallback: Callback<ResponseBody> = object : ObjectCallback(callback) {
             override fun onObject(obj: JSONObject) {
                 siteInfo = obj
@@ -130,31 +144,11 @@ class Client(url: String, val username: String, private val password: String) {
         val wikiDataCallback = object : ObjectCallback(callback) {
             override fun onObject(obj: JSONObject) {
                 wikiaData = obj
-                api.siteInfo().enqueue(siteInfoCallback)
+                wikiaApi.siteInfo().enqueue(siteInfoCallback)
             }
         }
 
-        val checkSuccess = object : ObjectCallback(callback) {
-            override fun onObject(obj: JSONObject) {
-                val result = obj.getJSONObject("login").getString("result")
-                if (result != "Success") {
-                    throw Exception(result)
-                }
-                api.wikiaData().enqueue(wikiDataCallback)
-            }
-        }
-
-        api.login(username, password).enqueue(object : ObjectCallback(callback) {
-            override fun onObject(obj: JSONObject) {
-                val result = obj.getJSONObject("login").getString("result")
-                if (result != "NeedToken") {
-                    checkSuccess.onObject(obj)
-                    return
-                }
-                val token = obj.getJSONObject("login").getString("token")
-                api.login(username, password, token).enqueue(checkSuccess)
-            }
-        })
+        wikiaApi.wikiaData().enqueue(wikiDataCallback)
     }
 
     fun connect() {

@@ -82,7 +82,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun login(username: String, password: String, onFailure: (throwable: Throwable) -> Unit) {
         val app = application as ChatApplication
-        app.client = Client("https://vintagepenguin.fandom.com", username, password)
+        app.client = Client(username, password)
         app.client.login(object : Client.LoginCallback {
             override fun onSuccess() {
                 with (app.sharedPref.edit()) {
@@ -90,12 +90,11 @@ class LoginActivity : AppCompatActivity() {
                     putString(getString(R.string.password_key), password)
                     apply()
                 }
-                setResult(RESULT_OK, Intent())
-                finish()
+                startActivity(Intent(this@LoginActivity, ChatSelectionActivity::class.java))
             }
 
             override fun onFailure(throwable: Throwable) {
-                Log.e("Chat", "Login failed: ${throwable.message}")
+                Log.e("LoginActivity", "Login failed: ${throwable.message}")
                 throwable.printStackTrace()
                 onFailure(throwable)
             }

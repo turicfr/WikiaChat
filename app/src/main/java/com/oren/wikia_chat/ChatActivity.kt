@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONObject
 
-class MainActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity() {
     private lateinit var mMessagesView: RecyclerView
     private lateinit var mAdapter: ChatAdapter
     private var mChatItems = ArrayList<ChatItem>()
@@ -22,13 +22,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_chat)
 
         mAdapter = ChatAdapter(this, mChatItems)
         mMessagesView = findViewById(R.id.messages)
         mMessagesView.apply {
             setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(this@MainActivity)
+            layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = mAdapter
         }
 
@@ -47,7 +47,19 @@ class MainActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        startLogin()
+        mClient = (application as ChatApplication).client
+        mClient.apply {
+            onEvent("meta") {}
+            onEvent("initial") { data -> runOnUiThread { onInitial(data) } }
+            onEvent("updateUser") { data -> runOnUiThread { onUpdateUser(data) } }
+            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            connect()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -65,32 +77,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        mClient = (application as ChatApplication).client
-        mClient.apply {
-            onEvent("meta") {}
-            onEvent("initial") { data -> runOnUiThread { onInitial(data) } }
-            onEvent("updateUser") { data -> runOnUiThread { onUpdateUser(data) } }
-            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
-            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
-            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
-            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
-            connect()
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
 
         mClient.disconnect()
-    }
-
-    private fun startLogin() {
-        startActivityForResult(Intent(this, LoginActivity::class.java), 0)
     }
 
     private fun logout() {
@@ -101,7 +91,7 @@ class MainActivity : AppCompatActivity() {
             apply()
         }
         mClient.disconnect()
-        startLogin()
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 
     private fun addLog(message: String) {
