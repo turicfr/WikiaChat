@@ -3,7 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ChatActivity">
-    <item android:id="@+id/logout"
+
+    <item android:id="@+id/action_participants"
+        android:title="@string/participants"
+        android:icon="@drawable/ic_baseline_people_24"
+        app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_logout"
         android:title="@string/logout"
         app:showAsAction="never" />
+
 </menu>

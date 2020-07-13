@@ -11,26 +11,34 @@ import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var mMessagesView: RecyclerView
-    private lateinit var mAdapter: ChatAdapter
+    private lateinit var mChatAdapter: ChatAdapter
     private var mChatItems = ArrayList<ChatItem>()
+
+    private lateinit var mParticipantsAdapter: UsersAdapter
+    private var mParticipants = listOf(User("aaa"), User("bbb"), User("ccc"))
+
     private lateinit var mInputMessageView: EditText
+
     private lateinit var mClient: Client
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-        mAdapter = ChatAdapter(this, mChatItems)
+        mChatAdapter = ChatAdapter(this, mChatItems)
         mMessagesView = findViewById(R.id.messages)
         mMessagesView.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
-            adapter = mAdapter
+            adapter = mChatAdapter
         }
+
+        mParticipantsAdapter = UsersAdapter(mParticipants)
 
         mInputMessageView = findViewById(R.id.message_input)
         mInputMessageView.setOnEditorActionListener { v, actionId, event ->
@@ -47,19 +55,7 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        mClient = (application as ChatApplication).client
-        mClient.apply {
-            onEvent("meta") {}
-            onEvent("initial") { data -> runOnUiThread { onInitial(data) } }
-            onEvent("updateUser") { data -> runOnUiThread { onUpdateUser(data) } }
-            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
-            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
-            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
-            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
-            connect()
-        }
+        startLogin()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -69,11 +65,45 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.logout -> {
+            R.id.action_logout -> {
                 logout()
                 true
             }
+            R.id.action_participants -> {
+                showParticipants()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showParticipants() {
+        val view = layoutInflater.inflate(R.layout.dialog_users, null)
+        view.findViewById<RecyclerView>(R.id.participants).apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = mParticipantsAdapter
+        }
+
+        BottomSheetDialog(this).apply {
+            setContentView(view)
+            show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        mClient = (application as ChatApplication).client
+        mClient.apply {
+            onEvent("meta") {}
+            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            connect()
         }
     }
 
@@ -96,12 +126,12 @@ class ChatActivity : AppCompatActivity() {
 
     private fun addLog(message: String) {
         mChatItems.add(ChatItem.Log(message))
-        mAdapter.notifyItemChanged(mChatItems.size - 1)
+        mChatAdapter.notifyItemChanged(mChatItems.size - 1)
         scrollToBottom()
     }
 
     private fun scrollToBottom() {
-        mMessagesView.scrollToPosition(mAdapter.itemCount - 1)
+        mMessagesView.scrollToPosition(mChatAdapter.itemCount - 1)
     }
 
     private fun sendMessage() {
@@ -120,13 +150,13 @@ class ChatActivity : AppCompatActivity() {
         val last = mChatItems.last()
         if (last is ChatItem.Message && last.username == username) {
             last.messages.add(message)
-            mAdapter.notifyItemChanged(mChatItems.size - 1)
+            mChatAdapter.notifyItemChanged(mChatItems.size - 1)
         } else {
             val avatarSrc = Uri.parse(attrs.getString("avatarSrc"))
             val segments = avatarSrc.pathSegments.slice(0 until avatarSrc.pathSegments.size - 2)
             val newUri = avatarSrc.buildUpon().path(segments.joinToString("/")).build()
             mChatItems.add(ChatItem.Message(username, mutableListOf(message), newUri.toString()))
-            mAdapter.notifyItemInserted(mChatItems.size - 1)
+            mChatAdapter.notifyItemInserted(mChatItems.size - 1)
         }
         scrollToBottom()
     }
@@ -147,13 +177,5 @@ class ChatActivity : AppCompatActivity() {
     private fun onJoin(data: JSONObject) {
         val username = data.getJSONObject("attrs").getString("name")
         addLog(resources.getString(R.string.message_user_joined, username))
-    }
-
-    private fun onUpdateUser(data: JSONObject) {
-        // TODO
-    }
-
-    private fun onInitial(data: JSONObject) {
-        // TODO
     }
 }
