@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -18,9 +19,6 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var mMessagesView: RecyclerView
     private lateinit var mChatAdapter: ChatAdapter
     private var mChatItems = ArrayList<ChatItem>()
-
-    private lateinit var mParticipantsAdapter: UsersAdapter
-    private var mParticipants = listOf(User("aaa"), User("bbb"), User("ccc"))
 
     private lateinit var mInputMessageView: EditText
 
@@ -38,8 +36,6 @@ class ChatActivity : AppCompatActivity() {
             adapter = mChatAdapter
         }
 
-        mParticipantsAdapter = UsersAdapter(mParticipants)
-
         mInputMessageView = findViewById(R.id.message_input)
         mInputMessageView.setOnEditorActionListener { v, actionId, event ->
             return@setOnEditorActionListener when (actionId) {
@@ -55,7 +51,17 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        startLogin()
+        mClient = (application as ChatApplication).client
+        mClient.apply {
+            onEvent("meta") {}
+            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            connect()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -80,30 +86,15 @@ class ChatActivity : AppCompatActivity() {
     private fun showParticipants() {
         val view = layoutInflater.inflate(R.layout.dialog_users, null)
         view.findViewById<RecyclerView>(R.id.participants).apply {
+            addItemDecoration(DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL))
             setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = mParticipantsAdapter
+            layoutManager = LinearLayoutManager(this@ChatActivity)
+            adapter = UsersAdapter(mClient.users.values.toList())
         }
 
         BottomSheetDialog(this).apply {
             setContentView(view)
             show()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        mClient = (application as ChatApplication).client
-        mClient.apply {
-            onEvent("meta") {}
-            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
-            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
-            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
-            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
-            connect()
         }
     }
 

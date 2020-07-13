@@ -26,7 +26,7 @@ class Client(val username: String, private val password: String) {
     private lateinit var siteInfo: JSONObject
     private lateinit var client: OkHttpClient
     private lateinit var socket: Socket
-    private val users = mutableMapOf<String, User>()
+    val users = mutableMapOf<String, User>()
 
     interface LoginCallback {
         fun onSuccess()
@@ -182,16 +182,35 @@ class Client(val username: String, private val password: String) {
         onEvent("updateUser") { data ->
             updateUser(data.getJSONObject("attrs"))
         }
+        onEvent("join") { data ->
+            onJoin(data.getJSONObject("attrs"))
+        }
+        onEvent("logout") { data ->
+            onLogout(data.getJSONObject("attrs"))
+        }
+        onEvent("part") { data ->
+            onLogout(data.getJSONObject("attrs"))
+        }
         socket.connect()
     }
 
     private fun updateUser(attrs: JSONObject) {
         // TODO: Rank, avatarSrc?
         val username = attrs.getString("name")
-        users[username.toLowerCase()] = User(
-            username
-            // attrs.getString("avatarSrc")
-        )
+        val user = User(username/*, attrs.getString("avatarSrc")*/)
+        users[user.name.toLowerCase()] = user
+    }
+
+    private fun onJoin(attrs: JSONObject) {
+        // TODO: Rank, avatarSrc?
+        val username = attrs.getString("name")
+        val user = User(username)
+        users[user.name.toLowerCase()] = user
+    }
+
+    private fun onLogout(attrs: JSONObject) {
+        val username = attrs.getString("name")
+        users.remove(username.toLowerCase())
     }
 
     fun disconnect() {
