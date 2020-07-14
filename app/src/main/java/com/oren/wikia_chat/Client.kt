@@ -24,9 +24,14 @@ import javax.net.ssl.X509TrustManager
 class Client(val username: String, private val password: String) {
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
-    private lateinit var client: OkHttpClient
-    private lateinit var socket: Socket
-    val users = mutableMapOf<String, User>()
+    private lateinit var mClient: OkHttpClient
+    private lateinit var mSocket: Socket
+    private val mUsersMap = mutableMapOf<String, User>()
+
+    val users: List<User>
+        get() = mUsersMap.values.toList()
+
+    fun getUser(username: String) = mUsersMap[username.toLowerCase()]!!
 
     interface LoginCallback {
         fun onSuccess()
@@ -102,17 +107,17 @@ class Client(val username: String, private val password: String) {
                     "&roomId=${wikiaData.getString("roomId")}" +
                     "&serverId=${siteInfo.getJSONObject("query").getJSONObject("wikidesc").getString("id")}"
         }
-        socket = IO.socket("https://${wikiaData.getString("chatServerHost")}", options)
+        mSocket = IO.socket("https://${wikiaData.getString("chatServerHost")}", options)
     }
 
     fun login(callback: LoginCallback) {
-        client = OkHttpClient.Builder()
+        mClient = OkHttpClient.Builder()
             .addNetworkInterceptor(HttpLoggingInterceptor())
             .cookieJar(JavaNetCookieJar(CookieManager()))
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl("https://services.fandom.com/")
-            .client(client)
+            .client(mClient)
             .build()
         val loginApi = retrofit.create(LoginApi::class.java)
 
@@ -130,7 +135,7 @@ class Client(val username: String, private val password: String) {
     fun init(url: String, callback: LoginCallback) {
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
-            .client(client)
+            .client(mClient)
             .build()
         val wikiaApi = retrofit.create(WikiaApi::class.java)
 
@@ -153,20 +158,20 @@ class Client(val username: String, private val password: String) {
     }
 
     fun connect() {
-        socket.on(Socket.EVENT_CONNECT) {
+        mSocket.on(Socket.EVENT_CONNECT) {
             Log.d("Chat", "connect")
             send(JSONObject().apply {
                 put("msgType", "command")
                 put("command", "initquery")
             })
         }
-        socket.on(Socket.EVENT_DISCONNECT) {
+        mSocket.on(Socket.EVENT_DISCONNECT) {
             Log.d("Chat", "disconnect")
         }
-        socket.on(Socket.EVENT_CONNECT_ERROR) {
+        mSocket.on(Socket.EVENT_CONNECT_ERROR) {
             Log.d("Chat", "connect_error")
         }
-        socket.on(Socket.EVENT_CONNECT_TIMEOUT) {
+        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT) {
             Log.d("Chat", "connect_timeout")
         }
         onEvent("initial") { data ->
@@ -191,40 +196,42 @@ class Client(val username: String, private val password: String) {
         onEvent("part") { data ->
             onLogout(data.getJSONObject("attrs"))
         }
-        socket.connect()
+        mSocket.connect()
     }
 
     private fun updateUser(attrs: JSONObject) {
-        // TODO: Rank, avatarSrc?
+        // TODO: Rank
         val username = attrs.getString("name")
-        val user = User(username/*, attrs.getString("avatarSrc")*/)
-        users[user.name.toLowerCase()] = user
+        val avatarSrc = attrs.getString("avatarSrc")
+        val user = User(username, avatarSrc)
+        mUsersMap[user.name.toLowerCase()] = user
     }
 
     private fun onJoin(attrs: JSONObject) {
-        // TODO: Rank, avatarSrc?
+        // TODO: Rank
         val username = attrs.getString("name")
-        val user = User(username)
-        users[user.name.toLowerCase()] = user
+        val avatarSrc = attrs.getString("avatarSrc")
+        val user = User(username, avatarSrc)
+        mUsersMap[user.name.toLowerCase()] = user
     }
 
     private fun onLogout(attrs: JSONObject) {
         val username = attrs.getString("name")
-        users.remove(username.toLowerCase())
+        mUsersMap.remove(username.toLowerCase())
     }
 
     fun disconnect() {
-        socket.disconnect()
+        mSocket.disconnect()
 
-        socket.off(Socket.EVENT_CONNECT)
-        socket.off(Socket.EVENT_DISCONNECT)
-        socket.off(Socket.EVENT_CONNECT_ERROR)
-        socket.off(Socket.EVENT_CONNECT_TIMEOUT)
+        mSocket.off(Socket.EVENT_CONNECT)
+        mSocket.off(Socket.EVENT_DISCONNECT)
+        mSocket.off(Socket.EVENT_CONNECT_ERROR)
+        mSocket.off(Socket.EVENT_CONNECT_TIMEOUT)
         // TODO: off "message"?
     }
 
     fun onEvent(event: String, handler: (data: JSONObject) -> Unit) {
-        socket.on("message") { args ->
+        mSocket.on("message") { args ->
             val obj = args[0] as JSONObject
             val data = JSONObject(obj.getString("data"))
             if (obj.getString("event") == event) {
@@ -234,7 +241,7 @@ class Client(val username: String, private val password: String) {
     }
 
     fun send(attrs: JSONObject) {
-        socket.send(JSONObject().apply {
+        mSocket.send(JSONObject().apply {
             put("id", JSONObject.NULL)
             put("attrs", attrs)
         }.toString())

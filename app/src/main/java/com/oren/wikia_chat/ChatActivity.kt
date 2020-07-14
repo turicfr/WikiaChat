@@ -91,7 +91,7 @@ class ChatActivity : AppCompatActivity() {
             )
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
-            adapter = UsersAdapter(mClient.users.values.toList())
+            adapter = UsersAdapter(mClient.users)
         }
 
         BottomSheetDialog(this).apply {
@@ -145,11 +145,10 @@ class ChatActivity : AppCompatActivity() {
             last.messages.add(message)
             mChatAdapter.notifyItemChanged(mChatItems.size - 1)
         } else {
-            // TODO: extract avatarSrc to User
-            val avatarSrc = Uri.parse(attrs.getString("avatarSrc"))
-            val segments = avatarSrc.pathSegments.slice(0 until avatarSrc.pathSegments.size - 2)
-            val newUri = avatarSrc.buildUpon().path(segments.joinToString("/")).build()
-            mChatItems.add(ChatItem.Message(username, mutableListOf(message), newUri.toString()))
+            val user = mClient.getUser(username)
+            mChatItems.add(
+                ChatItem.Message(username, mutableListOf(message), user.avatarUri.toString())
+            )
             mChatAdapter.notifyItemInserted(mChatItems.size - 1)
         }
         scrollToBottom()
