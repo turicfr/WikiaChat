@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class MyAdapter(private val mChats: MutableList<String>, private val listener: (TextView) -> Unit) :
+class MyAdapter(private val mChats: MutableList<String>, private val listener: (String) -> Unit) :
     RecyclerView.Adapter<MyAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -17,13 +17,21 @@ class MyAdapter(private val mChats: MutableList<String>, private val listener: (
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textView.text = mChats[position]
-        holder.itemView.setOnClickListener { listener(holder.textView) }
+        holder.name = mChats[position]
+        holder.itemView.setOnClickListener {
+            listener(holder.name)
+        }
     }
 
     override fun getItemCount() = mChats.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textView: TextView = itemView.findViewById(R.id.chat)
+        private val mTextView: TextView = itemView.findViewById(R.id.chat)
+
+        var name: String
+            get() = mTextView.text.toString()
+            set(value) {
+                mTextView.text = value
+            }
     }
 }

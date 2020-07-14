@@ -22,10 +22,9 @@ class LoginActivity : AppCompatActivity() {
             login(username, password) {
                 show()
             }
-            return
+        } else {
+            show()
         }
-
-        show()
     }
 
     private fun show() {
@@ -96,7 +95,6 @@ class LoginActivity : AppCompatActivity() {
             override fun onFailure(throwable: Throwable) {
                 Log.e("LoginActivity", "Login failed: ${throwable.message}")
                 throwable.printStackTrace()
-                onFailure(throwable)
             }
         })
     }

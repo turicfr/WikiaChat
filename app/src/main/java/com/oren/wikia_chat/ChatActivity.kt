@@ -86,7 +86,9 @@ class ChatActivity : AppCompatActivity() {
     private fun showParticipants() {
         val view = layoutInflater.inflate(R.layout.dialog_users, null)
         view.findViewById<RecyclerView>(R.id.participants).apply {
-            addItemDecoration(DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL))
+            addItemDecoration(
+                DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL)
+            )
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = UsersAdapter(mClient.users.values.toList())
@@ -143,6 +145,7 @@ class ChatActivity : AppCompatActivity() {
             last.messages.add(message)
             mChatAdapter.notifyItemChanged(mChatItems.size - 1)
         } else {
+            // TODO: extract avatarSrc to User
             val avatarSrc = Uri.parse(attrs.getString("avatarSrc"))
             val segments = avatarSrc.pathSegments.slice(0 until avatarSrc.pathSegments.size - 2)
             val newUri = avatarSrc.buildUpon().path(segments.joinToString("/")).build()
