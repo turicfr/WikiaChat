@@ -156,11 +156,19 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun onBan(data: JSONObject) {
-        // TODO
+        val attrs = data.getJSONObject("attrs")
+        val username = attrs.getString("kickedUserName")
+        val moderator = attrs.getString("moderatorName")
+        val actionId = if (attrs.getInt("time") == 0)
+            R.string.message_user_banned else R.string.message_user_unbanned
+        addLog(resources.getString(actionId, username, moderator))
     }
 
     private fun onKick(data: JSONObject) {
-        // TODO
+        val attrs = data.getJSONObject("attrs")
+        val username = attrs.getString("kickedUserName")
+        val moderator = attrs.getString("moderatorName")
+        addLog(resources.getString(R.string.message_user_kicked, username, moderator))
     }
 
     private fun onLogout(data: JSONObject) {

@@ -13,6 +13,10 @@
     <string name="message_prompt">Type a message</string>
     <string name="message_user_joined">%s has joined</string>
     <string name="message_user_left">%s has left</string>
+    <string name="message_user_banned">%s has been banned by %s</string>
+    <string name="message_user_unbanned">%s has been unbanned by %s</string>
+    <string name="message_user_kicked">%s has been kicked by %s</string>
+
     <string name="logout">Logout</string>
     <string name="participants">Participants</string>
     <string name="chat_hint">Wiki name</string>
