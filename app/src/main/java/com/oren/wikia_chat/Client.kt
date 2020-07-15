@@ -28,6 +28,9 @@ class Client(val username: String, private val password: String) {
     private lateinit var mSocket: Socket
     private val mUsersMap = mutableMapOf<String, User>()
 
+    val wikiName: String
+        get() = wikiaData.getJSONObject("themeSettings").getString("wordmark-text")
+
     val users: List<User>
         get() = mUsersMap.values.toList()
 

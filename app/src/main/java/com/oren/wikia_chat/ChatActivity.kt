@@ -1,7 +1,6 @@
 package com.oren.wikia_chat
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -28,22 +27,29 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
+        mClient = (application as ChatApplication).client
+
+        supportActionBar!!.apply {
+            setDisplayHomeAsUpEnabled(true)
+            title = mClient.wikiName
+        }
+
         mChatAdapter = ChatAdapter(this, mChatItems)
-        mMessagesView = findViewById(R.id.messages)
-        mMessagesView.apply {
+        mMessagesView = findViewById<RecyclerView>(R.id.messages).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = mChatAdapter
         }
 
-        mInputMessageView = findViewById(R.id.message_input)
-        mInputMessageView.setOnEditorActionListener { v, actionId, event ->
-            return@setOnEditorActionListener when (actionId) {
-                EditorInfo.IME_ACTION_SEND -> {
-                    sendMessage()
-                    true
+        mInputMessageView = findViewById<EditText>(R.id.message_input).apply {
+            setOnEditorActionListener { v, actionId, event ->
+                return@setOnEditorActionListener when (actionId) {
+                    EditorInfo.IME_ACTION_SEND -> {
+                        sendMessage()
+                        true
+                    }
+                    else -> false
                 }
-                else -> false
             }
         }
 
@@ -51,7 +57,6 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        mClient = (application as ChatApplication).client
         mClient.apply {
             onEvent("meta") {}
             onEvent("join") { data -> runOnUiThread { onJoin(data) } }

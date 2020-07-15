@@ -20,7 +20,7 @@ class ChatSelectionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_chat_selection)
 
         mAdapter = MyAdapter(mChatData) { name ->
-            choose("https://$name.fandom.com")
+            choose(name)
         }
 
         findViewById<RecyclerView>(R.id.chats).apply {
@@ -52,9 +52,9 @@ class ChatSelectionActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun choose(url: String) {
+    private fun choose(name: String) {
         val client = (application as ChatApplication).client
-        client.init(url, object : Client.LoginCallback {
+        client.init("https://$name.fandom.com", object : Client.LoginCallback {
             override fun onSuccess() {
                 startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java))
             }
