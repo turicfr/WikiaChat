@@ -62,6 +62,7 @@ class ChatSelectionActivity : AppCompatActivity() {
             override fun onFailure(throwable: Throwable) {
                 Log.e("ServerSelectionActivity", "Init socket failed: ${throwable.message}")
                 throwable.printStackTrace()
+                onFailure(throwable)
             }
         })
     }

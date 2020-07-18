@@ -39,6 +39,15 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:visibility="gone"
+        android:textColor="#FF0000"
+        android:drawableStart="@drawable/ic_baseline_error_24" />
+
     <Button
         android:id="@+id/sign_in_button"
         android:layout_width="wrap_content"

@@ -3,14 +3,17 @@ package com.oren.wikia_chat
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputLayout
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mUsernameView: TextInputLayout
     private lateinit var mPasswordView: TextInputLayout
+    private lateinit var mErrorMessageView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
 
         mUsernameView = findViewById(R.id.username)
         mPasswordView = findViewById(R.id.password)
+        mErrorMessageView = findViewById(R.id.error_message)
         findViewById<Button>(R.id.sign_in_button).setOnClickListener {
             attemptLogin()
         }
@@ -50,6 +54,7 @@ class LoginActivity : AppCompatActivity() {
     private fun attemptLogin() {
         mUsernameView.error = null
         mPasswordView.error = null
+        mErrorMessageView.visibility = View.GONE
 
         val username = mUsernameView.editText!!.text.toString()
         val password = mPasswordView.editText!!.text.toString()
@@ -66,15 +71,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
         login(username, password) { throwable ->
-            when (throwable.message) {
-                "NotExists" -> {
-                    mUsernameView.error = getString(R.string.user_does_not_exist)
-                    mUsernameView.requestFocus()
-                }
-                "WrongPass" -> {
-                    mPasswordView.error = getString(R.string.wrong_password)
-                    mPasswordView.requestFocus()
-                }
+            mErrorMessageView.apply {
+                text = throwable.message
+                visibility = View.VISIBLE
             }
         }
     }
@@ -95,6 +94,7 @@ class LoginActivity : AppCompatActivity() {
             override fun onFailure(throwable: Throwable) {
                 Log.e("LoginActivity", "Login failed: ${throwable.message}")
                 throwable.printStackTrace()
+                onFailure(throwable)
             }
         })
     }

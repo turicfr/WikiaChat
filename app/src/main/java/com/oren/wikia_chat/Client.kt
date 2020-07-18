@@ -13,6 +13,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
+import java.lang.Exception
 import java.net.CookieManager
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -43,8 +44,10 @@ class Client(val username: String, private val password: String) {
 
     private abstract class ObjectCallback(private val callback: LoginCallback) : Callback<ResponseBody> {
         override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            val body = if (response.isSuccessful) response.body() else response.errorBody()
+            val obj = JSONObject(body?.string()!!)
             try {
-                onObject(JSONObject(response.body()?.string()!!))
+                onObject(obj)
             } catch (e: Throwable) {
                 callback.onFailure(e)
                 return
@@ -127,8 +130,7 @@ class Client(val username: String, private val password: String) {
         loginApi.login(username, password).enqueue(object : ObjectCallback(callback) {
             override fun onObject(obj: JSONObject) {
                 if (obj.has("error")) {
-                    // TODO: handle errors
-                    return
+                    throw Exception(obj.getString("error_description"))
                 }
                 callback.onSuccess()
             }

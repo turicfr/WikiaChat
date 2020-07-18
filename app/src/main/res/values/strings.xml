@@ -4,8 +4,6 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="error_field_required">This field is required</string>
-    <string name="user_does_not_exist">User does not exist</string>
-    <string name="wrong_password">Wrong password</string>
 
     <string name="username_key">username</string>
     <string name="password_key">password</string>
