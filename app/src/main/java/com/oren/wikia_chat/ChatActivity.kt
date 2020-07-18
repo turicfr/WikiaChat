@@ -1,6 +1,5 @@
 package com.oren.wikia_chat
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -70,14 +69,15 @@ class ChatActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_chat, menu)
+        menuInflater.inflate(R.menu.menu_logout, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                logout()
+                (application as ChatApplication).logout(this)
                 true
             }
             R.id.action_participants -> {
@@ -109,17 +109,6 @@ class ChatActivity : AppCompatActivity() {
         super.onDestroy()
 
         mClient.disconnect()
-    }
-
-    private fun logout() {
-        val sharedPref = (application as ChatApplication).sharedPref
-        with (sharedPref.edit()) {
-            remove(getString(R.string.username_key))
-            remove(getString(R.string.password_key))
-            apply()
-        }
-        mClient.disconnect()
-        startActivity(Intent(this, LoginActivity::class.java))
     }
 
     private fun addLog(message: String) {

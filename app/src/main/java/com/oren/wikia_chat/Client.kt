@@ -226,8 +226,9 @@ class Client(val username: String, private val password: String) {
     }
 
     fun disconnect() {
-        mSocket.disconnect()
+        if (!this::mSocket.isInitialized) return
 
+        mSocket.disconnect()
         mSocket.off(Socket.EVENT_CONNECT)
         mSocket.off(Socket.EVENT_DISCONNECT)
         mSocket.off(Socket.EVENT_CONNECT_ERROR)

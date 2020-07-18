@@ -3,6 +3,8 @@ package com.oren.wikia_chat
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
@@ -37,6 +39,21 @@ class ChatSelectionActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_logout, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                (application as ChatApplication).logout(this)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun openDialog() {
         val view = layoutInflater.inflate(R.layout.dialog_chat, null)
         AlertDialog.Builder(this)
@@ -53,17 +70,17 @@ class ChatSelectionActivity : AppCompatActivity() {
     }
 
     private fun choose(name: String) {
-        val client = (application as ChatApplication).client
-        client.init("https://$name.fandom.com", object : Client.LoginCallback {
-            override fun onSuccess() {
-                startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java))
-            }
+        (application as ChatApplication).client.init("https://$name.fandom.com",
+            object : Client.LoginCallback {
+                override fun onSuccess() {
+                    startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java))
+                }
 
-            override fun onFailure(throwable: Throwable) {
-                Log.e("ServerSelectionActivity", "Init socket failed: ${throwable.message}")
-                throwable.printStackTrace()
-                onFailure(throwable)
-            }
-        })
+                override fun onFailure(throwable: Throwable) {
+                    Log.e("ServerSelectionActivity", "Init socket failed: ${throwable.message}")
+                    throwable.printStackTrace()
+                    onFailure(throwable)
+                }
+            })
     }
 }

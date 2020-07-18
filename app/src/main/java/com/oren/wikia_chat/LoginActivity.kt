@@ -1,8 +1,6 @@
 package com.oren.wikia_chat
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -22,7 +20,7 @@ class LoginActivity : AppCompatActivity() {
         val username = sharedPref.getString(getString(R.string.username_key), null)
         val password = sharedPref.getString(getString(R.string.password_key), null)
         if (username != null && password != null) {
-            login(username, password) {
+            (application as ChatApplication).login(this, username, password) {
                 show()
             }
         } else {
@@ -70,32 +68,11 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        login(username, password) { throwable ->
+        (application as ChatApplication).login(this, username, password) { throwable ->
             mErrorMessageView.apply {
                 text = throwable.message
                 visibility = View.VISIBLE
             }
         }
-    }
-
-    private fun login(username: String, password: String, onFailure: (throwable: Throwable) -> Unit) {
-        val app = application as ChatApplication
-        app.client = Client(username, password)
-        app.client.login(object : Client.LoginCallback {
-            override fun onSuccess() {
-                with (app.sharedPref.edit()) {
-                    putString(getString(R.string.username_key), username)
-                    putString(getString(R.string.password_key), password)
-                    apply()
-                }
-                startActivity(Intent(this@LoginActivity, ChatSelectionActivity::class.java))
-            }
-
-            override fun onFailure(throwable: Throwable) {
-                Log.e("LoginActivity", "Login failed: ${throwable.message}")
-                throwable.printStackTrace()
-                onFailure(throwable)
-            }
-        })
     }
 }
