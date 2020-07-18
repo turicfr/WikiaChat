@@ -43,10 +43,13 @@
         android:id="@+id/error_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:drawableStart="@drawable/ic_baseline_error_24"
+        android:drawableTint="@color/error"
         android:gravity="center"
+        android:textColor="@color/error"
         android:visibility="gone"
-        android:textColor="#FF0000"
-        android:drawableStart="@drawable/ic_baseline_error_24" />
+        tools:text="Error message"
+        tools:visibility="visible" />
 
     <Button
         android:id="@+id/sign_in_button"
