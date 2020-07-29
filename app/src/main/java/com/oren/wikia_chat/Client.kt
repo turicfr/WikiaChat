@@ -23,10 +23,13 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
 class Client(val username: String, private val password: String) {
+    private lateinit var wikiaApi: WikiaApi
     private lateinit var wikiaData: JSONObject
     private lateinit var siteInfo: JSONObject
-    private lateinit var mClient: OkHttpClient
+
+    private lateinit var mHttpClient: OkHttpClient
     private lateinit var mSocket: Socket
+
     private val mUsersMap = mutableMapOf<String, User>()
 
     val wikiName: String
@@ -37,6 +40,7 @@ class Client(val username: String, private val password: String) {
 
     fun getUser(username: String) = mUsersMap[username.toLowerCase()]!!
 
+    // TODO: Remove?
     interface LoginCallback {
         fun onSuccess()
         fun onFailure(throwable: Throwable)
@@ -111,19 +115,19 @@ class Client(val username: String, private val password: String) {
             query = "name=${username}" +
                     "&key=${wikiaData.getString("chatkey")}" +
                     "&roomId=${wikiaData.getString("roomId")}" +
-                    "&serverId=${siteInfo.getJSONObject("query").getJSONObject("wikidesc").getString("id")}"
+                    "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
         }
         mSocket = IO.socket("https://${wikiaData.getString("chatServerHost")}", options)
     }
 
     fun login(callback: LoginCallback) {
-        mClient = OkHttpClient.Builder()
+        mHttpClient = OkHttpClient.Builder()
             .addNetworkInterceptor(HttpLoggingInterceptor())
             .cookieJar(JavaNetCookieJar(CookieManager()))
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl("https://services.fandom.com/")
-            .client(mClient)
+            .client(mHttpClient)
             .build()
         val loginApi = retrofit.create(LoginApi::class.java)
 
@@ -140,13 +144,13 @@ class Client(val username: String, private val password: String) {
     fun init(url: String, callback: LoginCallback) {
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
-            .client(mClient)
+            .client(mHttpClient)
             .build()
-        val wikiaApi = retrofit.create(WikiaApi::class.java)
+        wikiaApi = retrofit.create(WikiaApi::class.java)
 
         val siteInfoCallback: Callback<ResponseBody> = object : ObjectCallback(callback) {
             override fun onObject(obj: JSONObject) {
-                siteInfo = obj
+                siteInfo = obj.getJSONObject("query")
                 initSocket()
                 callback.onSuccess()
             }
