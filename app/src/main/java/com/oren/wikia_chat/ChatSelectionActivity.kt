@@ -14,15 +14,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class ChatSelectionActivity : AppCompatActivity() {
-    private lateinit var mAdapter: MyAdapter
+    private lateinit var mAdapter: ChatSelectionAdapter
     private val mChatData = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat_selection)
 
-        mAdapter = MyAdapter(mChatData) { name ->
-            choose(name)
+        mAdapter = ChatSelectionAdapter(mChatData).apply {
+            setOnClickListener { name ->
+                choose(name)
+            }
         }
 
         findViewById<RecyclerView>(R.id.chats).apply {

@@ -6,8 +6,14 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class MyAdapter(private val mChats: MutableList<String>, private val listener: (String) -> Unit) :
-    RecyclerView.Adapter<MyAdapter.ViewHolder>() {
+class ChatSelectionAdapter(private val mChats: MutableList<String>) :
+    RecyclerView.Adapter<ChatSelectionAdapter.ViewHolder>() {
+    
+    private var listener: ((String) -> Unit)? = null
+    
+    fun setOnClickListener(listener: (String) -> Unit) {
+        this.listener = listener
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(LayoutInflater
@@ -19,7 +25,7 @@ class MyAdapter(private val mChats: MutableList<String>, private val listener: (
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.name = mChats[position]
         holder.itemView.setOnClickListener {
-            listener(holder.name)
+            listener?.let { it(holder.name) }
         }
     }
 
