@@ -25,7 +25,7 @@ class ChatSelectionAdapter(private val mChats: MutableList<String>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.name = mChats[position]
         holder.itemView.setOnClickListener {
-            listener?.let { it(holder.name) }
+            listener?.invoke(holder.name)
         }
     }
 

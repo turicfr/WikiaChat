@@ -13,15 +13,7 @@ import kotlin.math.abs
 class ChatAdapter(private val mContext: Context, private val mChatItems: List<ChatItem>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private lateinit var mOnLongItemClickListener: OnLongItemClickListener
-
-    fun setOnLongItemClickListener(OnLongItemClickListener: OnLongItemClickListener) {
-        mOnLongItemClickListener = OnLongItemClickListener
-    }
-
-    interface OnLongItemClickListener {
-        fun itemLongClicked(v: View?, position: Int)
-    }
+    var onCreateContextMenuListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -43,9 +35,8 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
         val message = mChatItems[position]
         when (viewHolder.itemViewType) {
             ChatItem.TYPE_MESSAGE -> {
-                viewHolder.itemView.setOnLongClickListener { v ->
-                    mOnLongItemClickListener.itemLongClicked(v, position)
-                    true
+                viewHolder.itemView.setOnCreateContextMenuListener { _, _, _ ->
+                    onCreateContextMenuListener?.invoke(position)
                 }
                 message as ChatItem.Message
                 viewHolder as MessageViewHolder

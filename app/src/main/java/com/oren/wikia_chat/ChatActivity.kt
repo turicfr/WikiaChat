@@ -42,12 +42,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
         mChatAdapter = ChatAdapter(this, mChatItems).apply {
-            setOnLongItemClickListener(object : ChatAdapter.OnLongItemClickListener {
-                override fun itemLongClicked(v: View?, position: Int) {
-                    mCurrentItemPosition = position
-                    v!!.showContextMenu()
-                }
-            })
+            onCreateContextMenuListener = { position -> mCurrentItemPosition = position }
         }
 
         mMessagesView = findViewById<RecyclerView>(R.id.messages).apply {
