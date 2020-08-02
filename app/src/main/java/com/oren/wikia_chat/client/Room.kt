@@ -57,17 +57,17 @@ class Room(private val mClient: Client, val id: Int) {
 
     fun connect() {
         mSocket.on(Socket.EVENT_CONNECT) {
-            Log.d("Chat", "connect")
-            send(JSONObject().apply {
-                put("msgType", "command")
-                put("command", "initquery")
-            })
+            Log.d("Room", "connect")
+            send(JSONObject()
+                .put("msgType", "command")
+                .put("command", "initquery")
+            )
         }
-        mSocket.on(Socket.EVENT_DISCONNECT) { Log.d("Chat", "disconnect") }
-        mSocket.on(Socket.EVENT_CONNECT_ERROR) { Log.d("Chat", "connect_error") }
-        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT) { Log.d("Chat", "connect_timeout") }
+        mSocket.on(Socket.EVENT_DISCONNECT) { Log.d("Room", "disconnect") }
+        mSocket.on(Socket.EVENT_CONNECT_ERROR) { Log.d("Room", "connect_error") }
+        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT) { Log.d("Room", "connect_timeout") }
         onEvent("initial", ::onInitial)
-        onEvent("join") { data -> onJoin(data.getJSONObject("attrs")) }
+        onEvent("join") { data -> updateUser(data.getJSONObject("attrs")) }
         onEvent("updateUser") { data -> updateUser(data.getJSONObject("attrs")) }
         onEvent("openPrivateRoom") { data -> onOpenPrivateRoom(data.getJSONObject("attrs")) }
         onEvent("part") { data -> onLogout(data.getJSONObject("attrs")) }
@@ -76,28 +76,20 @@ class Room(private val mClient: Client, val id: Int) {
     }
 
     fun sendMessage(message: String) {
-        send(JSONObject().apply {
-            put("msgType", "chat")
-            put("name", mClient.username)
-            put("text", message)
-        })
+        send(JSONObject()
+            .put("msgType", "chat")
+            .put("name", mClient.username)
+            .put("text", message)
+        )
     }
 
     fun openPrivateChat(user: User) {
-        send(JSONObject().apply {
-            put("msgType", "command")
-            put("command", "openprivate")
-            put("roomId", id)
-            put("users", JSONArray(listOf(mClient.username, user.name)))
-        })
-    }
-
-    private fun updateUser(attrs: JSONObject) {
-        // TODO: Rank
-        val username = attrs.getString("name")
-        val avatarSrc = attrs.getString("avatarSrc")
-        val user = User(username, avatarSrc)
-        mUsers[user.name.toLowerCase()] = user
+        send(JSONObject()
+            .put("msgType", "command")
+            .put("command", "openprivate")
+            .put("roomId", id)
+            .put("users", JSONArray().put(mClient.username).put(user.name))
+        )
     }
 
     fun disconnect() {
@@ -110,10 +102,11 @@ class Room(private val mClient: Client, val id: Int) {
     }
 
     private fun send(attrs: JSONObject) {
-        mSocket.send(JSONObject().apply {
-            put("id", JSONObject.NULL)
-            put("attrs", attrs)
-        }.toString())
+        mSocket.send(JSONObject()
+            .put("id", JSONObject.NULL)
+            .put("attrs", attrs)
+            .toString()
+        )
     }
 
     fun onEvent(event: String, handler: (data: JSONObject) -> Unit) {
@@ -137,12 +130,11 @@ class Room(private val mClient: Client, val id: Int) {
         }
     }
 
-    private fun onJoin(attrs: JSONObject) {
+    private fun updateUser(attrs: JSONObject) {
         // TODO: Rank
         val username = attrs.getString("name")
         val avatarSrc = attrs.getString("avatarSrc")
-        val user = User(username, avatarSrc)
-        mUsers[user.name.toLowerCase()] = user
+        mUsers[username.toLowerCase()] = User(username, avatarSrc)
     }
 
     private fun onLogout(attrs: JSONObject) {
@@ -151,6 +143,6 @@ class Room(private val mClient: Client, val id: Int) {
     }
 
     private fun onOpenPrivateRoom(attrs: JSONObject) {
-        // TODO
+        // TODO: Show new private message
     }
 }
