@@ -1,4 +1,4 @@
-package com.oren.wikia_chat
+package com.oren.wikia_chat.client
 
 import okhttp3.ResponseBody
 import retrofit2.Call

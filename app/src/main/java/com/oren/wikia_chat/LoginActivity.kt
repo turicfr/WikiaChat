@@ -15,15 +15,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val sharedPref = (application as ChatApplication).sharedPref
-        val username = sharedPref.getString(getString(R.string.username_key), null)
-        val password = sharedPref.getString(getString(R.string.password_key), null)
-        if (username != null && password != null) {
-            (application as ChatApplication).login(this, username, password) {
-                show()
-            }
-        } else {
+        if (!(application as ChatApplication).login(this) { show() }) {
             show()
         }
     }
@@ -38,7 +30,7 @@ class LoginActivity : AppCompatActivity() {
             attemptLogin()
         }
 
-        mPasswordView.editText!!.setOnEditorActionListener { v, actionId, event ->
+        mPasswordView.editText!!.setOnEditorActionListener { _, actionId, _ ->
             return@setOnEditorActionListener when (actionId) {
                 EditorInfo.IME_ACTION_GO -> {
                     attemptLogin()
@@ -57,12 +49,12 @@ class LoginActivity : AppCompatActivity() {
         val username = mUsernameView.editText!!.text.toString()
         val password = mPasswordView.editText!!.text.toString()
 
-        if (username == "") {
+        if (username.isBlank()) {
             mUsernameView.error = getString(R.string.error_field_required)
             mUsernameView.requestFocus()
             return
         }
-        if (password == "") {
+        if (password.isBlank()) {
             mPasswordView.error = getString(R.string.error_field_required)
             mPasswordView.requestFocus()
             return

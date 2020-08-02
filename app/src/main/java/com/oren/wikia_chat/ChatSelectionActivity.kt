@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.oren.wikia_chat.client.Client
+import com.oren.wikia_chat.client.Room
 
 class ChatSelectionActivity : AppCompatActivity() {
     private lateinit var mAdapter: ChatSelectionAdapter
@@ -28,12 +30,12 @@ class ChatSelectionActivity : AppCompatActivity() {
         }
 
         findViewById<RecyclerView>(R.id.chats).apply {
-            addItemDecoration(
-                DividerItemDecoration(applicationContext, DividerItemDecoration.VERTICAL)
-            )
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatSelectionActivity)
             adapter = mAdapter
+            addItemDecoration(
+                DividerItemDecoration(this@ChatSelectionActivity, DividerItemDecoration.VERTICAL)
+            )
         }
 
         findViewById<View>(R.id.fab).setOnClickListener {
@@ -58,30 +60,33 @@ class ChatSelectionActivity : AppCompatActivity() {
 
     private fun openDialog() {
         val view = layoutInflater.inflate(R.layout.dialog_chat, null)
+        // TODO: export to layout
         AlertDialog.Builder(this)
             .setTitle("Add chat")
             .setView(view)
-            .setPositiveButton("OK") { dialog, which ->
+            .setPositiveButton("OK") { _, _ ->
                 mChatData.add(view.findViewById<EditText>(R.id.chat).text.toString())
                 mAdapter.notifyItemInserted(mChatData.size - 1)
             }
-            .setNegativeButton("Cancel") { dialog, which ->
+            .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.cancel()
             }
             .show()
     }
 
     private fun choose(name: String) {
-        (application as ChatApplication).client.init("https://$name.fandom.com",
-            object : Client.LoginCallback {
-                override fun onSuccess() {
-                    startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java))
+        (application as ChatApplication).client.init("https://$name.fandom.com/",
+            object : Client.Callback<Room> {
+                override fun onSuccess(room: Room) {
+                    startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java)
+                        .apply {
+                            putExtra("roomId", room.id)
+                        })
                 }
 
                 override fun onFailure(throwable: Throwable) {
-                    Log.e("ServerSelectionActivity", "Init socket failed: ${throwable.message}")
+                    Log.e("ChatSelectionActivity", "init failed: ${throwable.message}")
                     throwable.printStackTrace()
-                    onFailure(throwable)
                 }
             })
     }

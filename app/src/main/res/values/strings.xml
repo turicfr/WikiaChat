@@ -5,9 +5,6 @@
     <string name="password">Password</string>
     <string name="error_field_required">This field is required</string>
 
-    <string name="username_key">username</string>
-    <string name="password_key">password</string>
-
     <string name="message_prompt">Type a message</string>
     <string name="message_user_joined">%s has joined</string>
     <string name="message_user_left">%s has left</string>
@@ -18,4 +15,5 @@
     <string name="logout">Logout</string>
     <string name="participants">Participants</string>
     <string name="chat_hint">Wiki name</string>
+    <string name="private_chat">Private chat</string>
 </resources>

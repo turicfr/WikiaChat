@@ -13,6 +13,16 @@ import kotlin.math.abs
 class ChatAdapter(private val mContext: Context, private val mChatItems: List<ChatItem>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    private lateinit var mOnLongItemClickListener: OnLongItemClickListener
+
+    fun setOnLongItemClickListener(OnLongItemClickListener: OnLongItemClickListener) {
+        mOnLongItemClickListener = OnLongItemClickListener
+    }
+
+    interface OnLongItemClickListener {
+        fun itemLongClicked(v: View?, position: Int)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             ChatItem.TYPE_MESSAGE -> MessageViewHolder(
@@ -33,14 +43,15 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
         val message = mChatItems[position]
         when (viewHolder.itemViewType) {
             ChatItem.TYPE_MESSAGE -> {
+                viewHolder.itemView.setOnLongClickListener { v ->
+                    mOnLongItemClickListener.itemLongClicked(v, position)
+                    true
+                }
                 message as ChatItem.Message
                 viewHolder as MessageViewHolder
-                viewHolder.username = message.username
+                viewHolder.username = message.user.name
                 viewHolder.message = message.messages.joinToString("\n")
-                Picasso.get()
-                    .load(message.avatarSrc)
-                    .transform(CircleTransform())
-                    .into(viewHolder.avatar)
+                viewHolder.avatarSrc = message.user.avatarUri.toString()
             }
             ChatItem.TYPE_LOG -> {
                 message as ChatItem.Log
@@ -57,19 +68,16 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
     private fun getUsernameColor(username: String): Int {
         val mUsernameColors: IntArray = mContext.resources.getIntArray(R.array.username_colors)
         var hash = 7
-        var i = 0
-        while (i < username.length) {
+        for (i in username.indices) {
             hash = username.codePointAt(i) + (hash shl 5) - hash
-            i++
         }
-        val index = abs(hash % mUsernameColors.size)
-        return mUsernameColors[index]
+        return mUsernameColors[abs(hash % mUsernameColors.size)]
     }
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mUsernameView = itemView.findViewById<TextView>(R.id.username)
         private val mMessageView = itemView.findViewById<TextView>(R.id.message)
-        val avatar = itemView.findViewById<ImageView>(R.id.avatar)
+        private val avatar = itemView.findViewById<ImageView>(R.id.avatar)
 
         var username: String
             get() = mUsernameView.text.toString()
@@ -82,6 +90,15 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
             get() = mMessageView.text.toString()
             set(value) {
                 mMessageView.text = value
+            }
+
+        var avatarSrc: String
+            get() = throw Exception()
+            set(value) {
+                Picasso.get()
+                    .load(value)
+                    .transform(CircleTransform())
+                    .into(avatar)
             }
     }
 

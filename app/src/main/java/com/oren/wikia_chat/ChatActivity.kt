@@ -1,8 +1,12 @@
 package com.oren.wikia_chat
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
@@ -11,37 +15,50 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.oren.wikia_chat.client.Client
+import com.oren.wikia_chat.client.Room
 import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var mMessagesView: RecyclerView
     private lateinit var mChatAdapter: ChatAdapter
-    private var mChatItems = ArrayList<ChatItem>()
-
+    private var mChatItems = mutableListOf<ChatItem>()
+    private var mCurrentItemPosition = 0
     private lateinit var mInputMessageView: EditText
 
     private lateinit var mClient: Client
+    private lateinit var mRoom: Room
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
         mClient = (application as ChatApplication).client
+        mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))
 
         supportActionBar!!.apply {
-            setDisplayHomeAsUpEnabled(true)
             title = mClient.wikiName
+            setDisplayHomeAsUpEnabled(true)
         }
 
-        mChatAdapter = ChatAdapter(this, mChatItems)
+        mChatAdapter = ChatAdapter(this, mChatItems).apply {
+            setOnLongItemClickListener(object : ChatAdapter.OnLongItemClickListener {
+                override fun itemLongClicked(v: View?, position: Int) {
+                    mCurrentItemPosition = position
+                    v!!.showContextMenu()
+                }
+            })
+        }
+
         mMessagesView = findViewById<RecyclerView>(R.id.messages).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = mChatAdapter
         }
+        registerForContextMenu(mMessagesView)
 
         mInputMessageView = findViewById<EditText>(R.id.message_input).apply {
-            setOnEditorActionListener { v, actionId, event ->
+            setOnEditorActionListener { _, actionId, _ ->
                 return@setOnEditorActionListener when (actionId) {
                     EditorInfo.IME_ACTION_SEND -> {
                         sendMessage()
@@ -56,8 +73,7 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        mClient.apply {
-            onEvent("meta") {}
+        mRoom.apply {
             onEvent("join") { data -> runOnUiThread { onJoin(data) } }
             onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
             onEvent("part") { data -> runOnUiThread { onLogout(data) } }
@@ -66,6 +82,40 @@ class ChatActivity : AppCompatActivity() {
             onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
             connect()
         }
+    }
+
+    override fun onCreateContextMenu(
+        menu: ContextMenu?,
+        v: View?,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        menuInflater.inflate(R.menu.context_menu, menu)
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.private_chat -> {
+                val chatItem = mChatItems[mCurrentItemPosition] as ChatItem.Message
+                openPrivateChat(chatItem)
+                true
+            }
+            else -> super.onContextItemSelected(item)
+        }
+    }
+
+    private fun openPrivateChat(message: ChatItem.Message) {
+        mClient.openPrivateChat(message.user, object : Client.Callback<Room> {
+            override fun onSuccess(room: Room) {
+                startActivity(Intent(this@ChatActivity, ChatActivity::class.java).apply {
+                    putExtra("roomId", room.id)
+                })
+            }
+
+            override fun onFailure(throwable: Throwable) {
+                Log.e("ChatActivity", "openPrivateChat failed: ${throwable.message}")
+                throwable.printStackTrace()
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -91,12 +141,12 @@ class ChatActivity : AppCompatActivity() {
     private fun showParticipants() {
         val view = layoutInflater.inflate(R.layout.dialog_users, null)
         view.findViewById<RecyclerView>(R.id.participants).apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(this@ChatActivity)
+            adapter = UsersAdapter(mRoom.users)
             addItemDecoration(
                 DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL)
             )
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(this@ChatActivity)
-            adapter = UsersAdapter(mClient.users)
         }
 
         BottomSheetDialog(this).apply {
@@ -107,8 +157,7 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-
-        mClient.disconnect()
+        mRoom.disconnect()
     }
 
     private fun addLog(message: String) {
@@ -122,27 +171,20 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun sendMessage() {
-        mClient.send(JSONObject().apply {
-            put("msgType", "chat")
-            put("name", mClient.username)
-            put("text", mInputMessageView.text.toString())
-        })
+        mRoom.sendMessage(mInputMessageView.text.toString())
         mInputMessageView.text.clear()
     }
 
     private fun onMessage(data: JSONObject) {
         val attrs = data.getJSONObject("attrs")
-        val username = attrs.getString("name")
+        val user = mRoom.getUser(attrs.getString("name"))
         val message = attrs.getString("text")
         val last = mChatItems.last()
-        if (last is ChatItem.Message && last.username == username) {
+        if (last is ChatItem.Message && last.user == user) {
             last.messages.add(message)
             mChatAdapter.notifyItemChanged(mChatItems.size - 1)
         } else {
-            val user = mClient.getUser(username)
-            mChatItems.add(
-                ChatItem.Message(username, mutableListOf(message), user.avatarUri.toString())
-            )
+            mChatItems.add(ChatItem.Message(user, mutableListOf(message)))
             mChatAdapter.notifyItemInserted(mChatItems.size - 1)
         }
         scrollToBottom()
