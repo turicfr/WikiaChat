@@ -1,54 +1,16 @@
 package com.oren.wikia_chat.client
 
 import android.util.Log
-import io.socket.client.IO
 import io.socket.client.Socket
-import okhttp3.ConnectionPool
-import okhttp3.OkHttpClient
-import org.json.JSONArray
 import org.json.JSONObject
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
-class Room(private val mClient: Client, val id: Int) {
-    private var mSocket: Socket
+class Room(
+    val id: Int,
+    private val mUsername: String,
+    private val mSocket: Socket,
+    private val parent: Room? = null
+) {
     private val mUsers = mutableMapOf<String, User>()
-
-    init {
-        val trustManager = object : X509TrustManager {
-            override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-            override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        }
-
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, arrayOf(trustManager), SecureRandom())
-
-        val okHttpClient = OkHttpClient.Builder()
-            .retryOnConnectionFailure(true)
-            .connectTimeout(5, TimeUnit.MINUTES)
-            .writeTimeout(5, TimeUnit.MINUTES)
-            .readTimeout(5, TimeUnit.MINUTES)
-            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
-            .hostnameVerifier(HostnameVerifier { _, _ -> true })
-            .sslSocketFactory(sslContext.socketFactory, trustManager)
-            .build()
-        IO.setDefaultOkHttpCallFactory(okHttpClient)
-
-        mSocket = IO.socket("https://${mClient.wikiaData.getString("chatServerHost")}",
-            IO.Options().apply {
-                callFactory = okHttpClient
-                path = "/socket.io"
-                query = "name=${mClient.username}" +
-                        "&key=${mClient.wikiaData.getString("chatkey")}" +
-                        "&roomId=$id" +
-                        "&serverId=${mClient.siteInfo.getJSONObject("wikidesc").getString("id")}"
-            })
-    }
 
     val users: List<User>
         get() = mUsers.values.toList()
@@ -75,23 +37,6 @@ class Room(private val mClient: Client, val id: Int) {
         mSocket.connect()
     }
 
-    fun sendMessage(message: String) {
-        send(JSONObject()
-            .put("msgType", "chat")
-            .put("name", mClient.username)
-            .put("text", message)
-        )
-    }
-
-    fun openPrivateChat(user: User) {
-        send(JSONObject()
-            .put("msgType", "command")
-            .put("command", "openprivate")
-            .put("roomId", id)
-            .put("users", JSONArray().put(mClient.username).put(user.name))
-        )
-    }
-
     fun disconnect() {
         mSocket.disconnect()
         mSocket.off(Socket.EVENT_CONNECT)
@@ -106,6 +51,21 @@ class Room(private val mClient: Client, val id: Int) {
             .put("id", JSONObject.NULL)
             .put("attrs", attrs)
             .toString()
+        )
+    }
+
+    fun sendMessage(message: String) {
+        if (parent !== null) {
+            parent.send(JSONObject()
+                .put("msgType", "command")
+                .put("command", "openprivate")
+                .put("roomId", id)
+            )
+        }
+        send(JSONObject()
+            .put("msgType", "chat")
+            .put("name", mUsername)
+            .put("text", message)
         )
     }
 
@@ -125,8 +85,7 @@ class Room(private val mClient: Client, val id: Int) {
             .getJSONObject("users")
             .getJSONArray("models")
         for (i in 0 until models.length()) {
-            val user = models.getJSONObject(i)
-            updateUser(user.getJSONObject("attrs"))
+            updateUser(models.getJSONObject(i).getJSONObject("attrs"))
         }
     }
 

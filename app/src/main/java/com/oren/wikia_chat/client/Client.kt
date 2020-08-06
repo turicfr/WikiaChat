@@ -1,5 +1,8 @@
 package com.oren.wikia_chat.client
 
+import io.socket.client.IO
+import io.socket.client.Socket
+import okhttp3.ConnectionPool
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
@@ -10,16 +13,28 @@ import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Retrofit
 import java.net.CookieManager
-
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.SSLContext
+import javax.net.ssl.X509TrustManager
 
 class Client {
     private lateinit var wikiaApi: WikiaApi
-    internal lateinit var wikiaData: JSONObject
-    internal lateinit var siteInfo: JSONObject
+    private lateinit var wikiaData: JSONObject
+    private lateinit var siteInfo: JSONObject
 
-    private lateinit var mHttpClient: OkHttpClient
+    private val mHttpClient = OkHttpClient.Builder()
+        .addNetworkInterceptor(HttpLoggingInterceptor())
+        /*.addInterceptor(HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        })*/
+        .cookieJar(JavaNetCookieJar(CookieManager()))
+        .build()
 
     private lateinit var mUsername: String
+    private lateinit var mMainRoom: Room
     private val mRooms = mutableMapOf<Int, Room>()
 
     val wikiName: String
@@ -57,19 +72,11 @@ class Client {
 
     fun login(username: String, password: String, callback: Callback<Unit>) {
         mUsername = username
-        mHttpClient = OkHttpClient.Builder()
-            .addNetworkInterceptor(HttpLoggingInterceptor())
-            /*.addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })*/
-            .cookieJar(JavaNetCookieJar(CookieManager()))
-            .build()
         val retrofit = Retrofit.Builder()
             .baseUrl("https://services.fandom.com/")
             .client(mHttpClient)
             .build()
         val loginApi = retrofit.create(LoginApi::class.java)
-
         loginApi.login(username, password).enqueue(object : ObjectCallback<Unit>(callback) {
             override fun onObject(obj: JSONObject) {
                 if (obj.has("error")) {
@@ -87,16 +94,15 @@ class Client {
             .build()
         wikiaApi = retrofit.create(WikiaApi::class.java)
 
-        val siteInfoCallback: retrofit2.Callback<ResponseBody> =
-            object : ObjectCallback<Room>(callback) {
-                override fun onObject(obj: JSONObject) {
-                    siteInfo = obj.getJSONObject("query")
-                    val roomId = wikiaData.getInt("roomId")
-                    val room = Room(this@Client, roomId)
-                    mRooms[roomId] = room
-                    callback.onSuccess(room)
-                }
+        val siteInfoCallback = object : ObjectCallback<Room>(callback) {
+            override fun onObject(obj: JSONObject) {
+                siteInfo = obj.getJSONObject("query")
+                val roomId = wikiaData.getInt("roomId")
+                mMainRoom = Room(roomId, mUsername, createSocket(roomId))
+                mRooms[roomId] = mMainRoom
+                callback.onSuccess(mMainRoom)
             }
+        }
 
         val wikiDataCallback = object : ObjectCallback<Room>(callback) {
             override fun onObject(obj: JSONObject) {
@@ -108,6 +114,38 @@ class Client {
         wikiaApi.wikiaData().enqueue(wikiDataCallback)
     }
 
+    private fun createSocket(roomId: Int): Socket {
+        val trustManager = object : X509TrustManager {
+            override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
+            override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        }
+
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(null, arrayOf(trustManager), SecureRandom())
+
+        val okHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(true)
+            .connectTimeout(5, TimeUnit.MINUTES)
+            .writeTimeout(5, TimeUnit.MINUTES)
+            .readTimeout(5, TimeUnit.MINUTES)
+            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
+            .hostnameVerifier(HostnameVerifier { _, _ -> true })
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            .build()
+        IO.setDefaultOkHttpCallFactory(okHttpClient)
+
+        return IO.socket("https://${wikiaData.getString("chatServerHost")}",
+            IO.Options().apply {
+                callFactory = okHttpClient
+                path = "/socket.io"
+                query = "name=${username}" +
+                        "&key=${wikiaData.getString("chatkey")}" +
+                        "&roomId=$roomId" +
+                        "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
+            })
+    }
+
     fun openPrivateChat(user: User, callback: Callback<Room>) {
         wikiaApi.getPrivateRoomId(
             JSONArray(listOf(mUsername, user.name)),
@@ -116,9 +154,8 @@ class Client {
             .enqueue(object : ObjectCallback<Room>(callback) {
                 override fun onObject(obj: JSONObject) {
                     val roomId = obj.getInt("id")
-                    val room = Room(this@Client, roomId)
+                    val room = Room(roomId, mUsername, createSocket(roomId), mMainRoom)
                     mRooms[roomId] = room
-                    room.openPrivateChat(user)
                     callback.onSuccess(room)
                 }
             })
