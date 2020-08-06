@@ -39,12 +39,12 @@ dependencies {
     implementation(kotlin("stdlib-jdk7", KotlinCompilerVersion.VERSION))
 
     implementation("androidx.core:core-ktx:1.3.1")
-    implementation("androidx.appcompat:appcompat:1.1.0")
+    implementation("androidx.appcompat:appcompat:1.2.0")
     implementation("androidx.recyclerview:recyclerview:1.1.0")
     implementation("androidx.fragment:fragment-ktx:1.3.0-alpha07")
     implementation("androidx.preference:preference:1.1.1")
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.1.0")
-    implementation("com.google.android.material:material:1.1.0")
+    implementation("com.google.android.material:material:1.2.0")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.7.2")
