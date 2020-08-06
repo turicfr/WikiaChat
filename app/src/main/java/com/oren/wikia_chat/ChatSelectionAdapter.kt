@@ -32,7 +32,7 @@ class ChatSelectionAdapter(private val mChats: MutableList<String>) :
     override fun getItemCount() = mChats.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val mTextView: TextView = itemView.findViewById(R.id.chat)
+        private val mTextView = itemView.findViewById<TextView>(R.id.chat)
 
         var name: String
             get() = mTextView.text.toString()

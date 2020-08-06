@@ -57,12 +57,12 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
     override fun getItemViewType(position: Int) = mChatItems[position].type
 
     private fun getUsernameColor(username: String): Int {
-        val mUsernameColors: IntArray = mContext.resources.getIntArray(R.array.username_colors)
+        val usernameColors = mContext.resources.getIntArray(R.array.username_colors)
         var hash = 7
         for (i in username.indices) {
             hash = username.codePointAt(i) + (hash shl 5) - hash
         }
-        return mUsernameColors[abs(hash % mUsernameColors.size)]
+        return usernameColors[abs(hash % usernameColors.size)]
     }
 
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
