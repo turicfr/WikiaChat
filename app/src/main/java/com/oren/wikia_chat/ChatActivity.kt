@@ -1,6 +1,9 @@
 package com.oren.wikia_chat
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.ContextMenu
@@ -17,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.oren.wikia_chat.client.Client
 import com.oren.wikia_chat.client.Room
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity() {
@@ -37,8 +42,18 @@ class ChatActivity : AppCompatActivity() {
         mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))
 
         supportActionBar!!.apply {
-            title = mClient.wikiName
-            setDisplayHomeAsUpEnabled(true)
+            title = ""
+            Picasso.get()
+                .load(mClient.wikiImageUrl)
+                .into(object : Target {
+                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                        setIcon(BitmapDrawable(resources, bitmap))
+                        setDisplayShowHomeEnabled(true)
+                        setDisplayHomeAsUpEnabled(true)
+                    }
+                })
         }
 
         mChatAdapter = ChatAdapter(this, mChatItems).apply {

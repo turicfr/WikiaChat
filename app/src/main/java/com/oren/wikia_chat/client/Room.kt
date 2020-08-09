@@ -1,5 +1,6 @@
 package com.oren.wikia_chat.client
 
+import android.net.Uri
 import android.util.Log
 import io.socket.client.Socket
 import org.json.JSONObject
@@ -92,8 +93,10 @@ class Room(
     private fun updateUser(attrs: JSONObject) {
         // TODO: Rank
         val username = attrs.getString("name")
-        val avatarSrc = attrs.getString("avatarSrc")
-        mUsers[username.toLowerCase()] = User(username, avatarSrc)
+        val avatarUri = Uri.parse(attrs.getString("avatarSrc"))
+        val segments = avatarUri.pathSegments.slice(0 until avatarUri.pathSegments.size - 2)
+        mUsers[username.toLowerCase()] =
+            User(username, avatarUri.buildUpon().path(segments.joinToString("/")).build())
     }
 
     private fun onLogout(attrs: JSONObject) {

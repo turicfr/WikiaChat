@@ -7,6 +7,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -14,14 +16,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.Client
 import com.oren.wikia_chat.client.Room
+import com.squareup.picasso.Picasso
 
 class ChatSelectionActivity : AppCompatActivity() {
+    private lateinit var mClient: Client
     private lateinit var mAdapter: ChatSelectionAdapter
     private val mChatData = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat_selection)
+
+        mClient = (application as ChatApplication).client
+        findViewById<TextView>(R.id.username).text = mClient.user.name
+        Picasso.get()
+            .load(mClient.user.avatarUri)
+            .placeholder(R.drawable.ic_placeholder_avatar)
+            .transform(CircleTransform())
+            .into(findViewById<ImageView>(R.id.avatar))
 
         mAdapter = ChatSelectionAdapter(mChatData).apply {
             setOnClickListener { name ->
@@ -75,19 +87,17 @@ class ChatSelectionActivity : AppCompatActivity() {
     }
 
     private fun choose(name: String) {
-        (application as ChatApplication).client.init("https://$name.fandom.com/",
-            object : Client.Callback<Room> {
-                override fun onSuccess(room: Room) {
-                    startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java)
-                        .apply {
-                            putExtra("roomId", room.id)
-                        })
-                }
+        mClient.init("https://$name.fandom.com/", object : Client.Callback<Room> {
+            override fun onSuccess(room: Room) {
+                startActivity(Intent(this@ChatSelectionActivity, ChatActivity::class.java).apply {
+                    putExtra("roomId", room.id)
+                })
+            }
 
-                override fun onFailure(throwable: Throwable) {
-                    Log.e("ChatSelectionActivity", "init failed: ${throwable.message}")
-                    throwable.printStackTrace()
-                }
-            })
+            override fun onFailure(throwable: Throwable) {
+                Log.e("ChatSelectionActivity", "init failed: ${throwable.message}")
+                throwable.printStackTrace()
+            }
+        })
     }
 }

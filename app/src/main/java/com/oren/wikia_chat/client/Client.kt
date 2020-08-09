@@ -33,15 +33,18 @@ class Client {
         .cookieJar(JavaNetCookieJar(CookieManager()))
         .build()
 
-    private lateinit var mUsername: String
+    private lateinit var mUser: User
     private lateinit var mMainRoom: Room
     private val mRooms = mutableMapOf<Int, Room>()
 
     val wikiName: String
         get() = wikiaData.getJSONObject("themeSettings").getString("wordmark-text")
 
-    val username: String
-        get() = mUsername
+    val wikiImageUrl: String
+        get() = wikiaData.getJSONObject("themeSettings").getString("wordmark-image-url")
+
+    val user: User
+        get() = mUser
 
     fun getRoom(id: Int) = mRooms[id]!!
 
@@ -71,7 +74,6 @@ class Client {
     }
 
     fun login(username: String, password: String, callback: Callback<Unit>) {
-        mUsername = username
         val retrofit = Retrofit.Builder()
             .baseUrl("https://services.fandom.com/")
             .client(mHttpClient)
@@ -82,6 +84,10 @@ class Client {
                 if (obj.has("error")) {
                     throw Exception(obj.getString("error_description"))
                 }
+                mUser = User(
+                    username,
+                    "https://services.fandom.com/user-avatar/user/${obj.getString("user_id")}/avatar"
+                )
                 callback.onSuccess(Unit)
             }
         })
@@ -98,7 +104,7 @@ class Client {
             override fun onObject(obj: JSONObject) {
                 siteInfo = obj.getJSONObject("query")
                 val roomId = wikiaData.getInt("roomId")
-                mMainRoom = Room(roomId, mUsername, createSocket(roomId))
+                mMainRoom = Room(roomId, mUser.name, createSocket(roomId))
                 mRooms[roomId] = mMainRoom
                 callback.onSuccess(mMainRoom)
             }
@@ -135,30 +141,28 @@ class Client {
             .build()
         IO.setDefaultOkHttpCallFactory(okHttpClient)
 
-        return IO.socket("https://${wikiaData.getString("chatServerHost")}",
-            IO.Options().apply {
-                callFactory = okHttpClient
-                path = "/socket.io"
-                query = "name=${username}" +
-                        "&key=${wikiaData.getString("chatkey")}" +
-                        "&roomId=$roomId" +
-                        "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
-            })
+        return IO.socket("https://${wikiaData.getString("chatServerHost")}", IO.Options().apply {
+            callFactory = okHttpClient
+            path = "/socket.io"
+            query = "name=${mUser.name}" +
+                    "&key=${wikiaData.getString("chatkey")}" +
+                    "&roomId=$roomId" +
+                    "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
+        })
     }
 
     fun openPrivateChat(user: User, callback: Callback<Room>) {
         wikiaApi.getPrivateRoomId(
-            JSONArray(listOf(mUsername, user.name)),
+            JSONArray(listOf(mUser.name, user.name)),
             siteInfo.getJSONObject("pages").getJSONObject("-1").getString("edittoken")
-        )
-            .enqueue(object : ObjectCallback<Room>(callback) {
-                override fun onObject(obj: JSONObject) {
-                    val roomId = obj.getInt("id")
-                    val room = Room(roomId, mUsername, createSocket(roomId), mMainRoom)
-                    mRooms[roomId] = room
-                    callback.onSuccess(room)
-                }
-            })
+        ).enqueue(object : ObjectCallback<Room>(callback) {
+            override fun onObject(obj: JSONObject) {
+                val roomId = obj.getInt("id")
+                val room = Room(roomId, mUser.name, createSocket(roomId), mMainRoom)
+                mRooms[roomId] = room
+                callback.onSuccess(room)
+            }
+        })
     }
 
     fun logout() {
