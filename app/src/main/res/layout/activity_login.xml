@@ -13,7 +13,8 @@
         android:layout_height="match_parent"
         android:layout_width="match_parent"
         style="@style/Widget.MaterialComponents.ProgressIndicator.Linear.Indeterminate"
-        app:indicatorColor="@color/colorAccent"
+        app:trackColor="@color/colorTrack"
+        app:indicatorColor="@color/colorIndicator"
         app:growMode="incoming"
         android:visibility="gone" />
 
@@ -58,9 +59,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/ic_baseline_error_24"
-            app:drawableTint="@color/error"
+            app:drawableTint="@color/colorError"
             android:gravity="center"
-            android:textColor="@color/error"
+            android:textColor="@color/colorError"
             android:visibility="gone"
             tools:text="Error message"
             tools:visibility="visible" />
