@@ -43,18 +43,24 @@ class ChatActivity : AppCompatActivity() {
         mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))
 
         supportActionBar!!.apply {
-            title = ""
-            Picasso.get()
-                .load(mClient.wikiImageUrl)
-                .into(object : Target {
-                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
-                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
-                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                        setIcon(BitmapDrawable(resources, bitmap))
-                        setDisplayShowHomeEnabled(true)
-                        setDisplayHomeAsUpEnabled(true)
-                    }
-                })
+            if (mClient.wikiImageUrl.isEmpty()) {
+                title = mClient.wikiName
+            } else {
+                title = ""
+                Picasso.get()
+                    .load(mClient.wikiImageUrl)
+                    .into(object : Target {
+                        override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+
+                        override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
+
+                        override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                            setIcon(BitmapDrawable(resources, bitmap))
+                            setDisplayShowHomeEnabled(true)
+                        }
+                    })
+            }
+            setDisplayHomeAsUpEnabled(true)
         }
 
         mChatAdapter = ChatAdapter(this, mChatItems).apply {
