@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ChatSelectionAdapter(private val mChats: MutableList<String>) :
     RecyclerView.Adapter<ChatSelectionAdapter.ViewHolder>() {
-    
+
     private var listener: ((String) -> Unit)? = null
-    
+
     fun setOnClickListener(listener: (String) -> Unit) {
         this.listener = listener
     }

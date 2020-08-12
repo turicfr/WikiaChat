@@ -10,17 +10,25 @@ import com.oren.wikia_chat.client.User
 import com.squareup.picasso.Picasso
 
 class UsersAdapter(private val mUsers: List<User>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    private var listener: ((User) -> Unit)? = null
+
+    fun setOnClickListener(listener: (User) -> Unit) {
+        this.listener = listener
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         return UserViewHolder(LayoutInflater
             .from(parent.context)
             .inflate(R.layout.item_user, parent, false))
     }
 
-    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(viewHolder: UserViewHolder, position: Int) {
         val user = mUsers[position]
-        viewHolder as UserViewHolder
+        viewHolder.itemView.setOnClickListener {
+            listener?.invoke(user)
+        }
         viewHolder.username = user.name
         Picasso.get()
             .load(user.avatarUri)
@@ -32,7 +40,7 @@ class UsersAdapter(private val mUsers: List<User>) :
 
     class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mUsernameView = itemView.findViewById<TextView>(R.id.username)
-        val avatar = itemView.findViewById<ImageView>(R.id.avatar)
+        val avatar: ImageView = itemView.findViewById(R.id.avatar)
 
         var username: String
             get() = mUsernameView.text.toString()

@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.oren.wikia_chat.client.Client
 import com.oren.wikia_chat.client.Room
+import com.oren.wikia_chat.client.User
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import org.json.JSONObject
@@ -106,15 +107,15 @@ class ChatActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.private_chat -> {
                 val chatItem = mChatItems[mCurrentItemPosition] as ChatItem.Message
-                openPrivateChat(chatItem)
+                openPrivateChat(chatItem.user)
                 true
             }
             else -> super.onContextItemSelected(item)
         }
     }
 
-    private fun openPrivateChat(message: ChatItem.Message) {
-        mClient.openPrivateChat(message.user, object : Client.Callback<Room> {
+    private fun openPrivateChat(user: User) {
+        mClient.openPrivateChat(user, object : Client.Callback<Room> {
             override fun onSuccess(room: Room) {
                 startActivity(Intent(this@ChatActivity, ChatActivity::class.java).apply {
                     putExtra("roomId", room.id)
@@ -153,7 +154,9 @@ class ChatActivity : AppCompatActivity() {
         view.findViewById<RecyclerView>(R.id.participants).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
-            adapter = UsersAdapter(mRoom.users)
+            adapter = UsersAdapter(mRoom.users).apply {
+                setOnClickListener { user -> openPrivateChat(user) }
+            }
             addItemDecoration(
                 DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL)
             )
