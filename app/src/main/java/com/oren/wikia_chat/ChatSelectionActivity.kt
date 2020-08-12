@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.Client
 import com.oren.wikia_chat.client.Room
+import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 
 class ChatSelectionActivity : AppCompatActivity() {
@@ -29,11 +30,20 @@ class ChatSelectionActivity : AppCompatActivity() {
 
         mClient = (application as ChatApplication).client
         findViewById<TextView>(R.id.username).text = mClient.user.name
+        val avatarView = findViewById<ImageView>(R.id.avatar)
         Picasso.get()
             .load(mClient.user.avatarUri)
-            .placeholder(R.drawable.ic_placeholder_avatar)
             .transform(CircleTransform())
-            .into(findViewById<ImageView>(R.id.avatar))
+            .into(avatarView, object : Callback {
+                override fun onSuccess() {}
+
+                override fun onError(e: Exception?) {
+                    Picasso.get()
+                        .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
+                        .transform(CircleTransform())
+                        .into(avatarView)
+                }
+            })
 
         mAdapter = ChatSelectionAdapter(mChatData).apply {
             setOnClickListener { name ->
