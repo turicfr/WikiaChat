@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.oren.wikia_chat.client.Client
 
@@ -41,10 +42,9 @@ class ChatApplication : Application() {
         client = Client()
         client.login(username, password, object : Client.Callback<Unit> {
             override fun onSuccess(value: Unit) {
-                with(sharedPref.edit()) {
+                sharedPref.edit {
                     putString(USERNAME_KEY, username)
                     putString(PASSWORD_KEY, password)
-                    apply()
                 }
                 context.startActivity(Intent(context, ChatSelectionActivity::class.java))
             }
@@ -58,10 +58,9 @@ class ChatApplication : Application() {
     }
 
     fun logout(context: Context) {
-        with(sharedPref.edit()) {
+        sharedPref.edit {
             remove(USERNAME_KEY)
             remove(PASSWORD_KEY)
-            apply()
         }
         client.logout()
         context.startActivity(Intent(context, LoginActivity::class.java))
