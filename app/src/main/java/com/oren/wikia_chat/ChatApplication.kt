@@ -23,21 +23,21 @@ class ChatApplication : Application() {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
     }
 
-    fun login(context: Context, onFailure: (throwable: Throwable) -> Unit): Boolean {
+    fun login(context: Context, callback: Client.Callback<Unit>) {
         val username = sharedPref.getString(USERNAME_KEY, null)
         val password = sharedPref.getString(PASSWORD_KEY, null)
         if (username == null || password == null) {
-            return false
+            callback.onFailure(Exception())
+            return
         }
-        login(context, username, password, onFailure)
-        return true
+        login(context, username, password, callback)
     }
 
     fun login(
         context: Context,
         username: String,
         password: String,
-        onFailure: (throwable: Throwable) -> Unit
+        callback: Client.Callback<Unit>
     ) {
         client = Client()
         client.login(username, password, object : Client.Callback<Unit> {
@@ -47,12 +47,13 @@ class ChatApplication : Application() {
                     putString(PASSWORD_KEY, password)
                 }
                 context.startActivity(Intent(context, ChatSelectionActivity::class.java))
+                callback.onSuccess(Unit)
             }
 
             override fun onFailure(throwable: Throwable) {
                 Log.e("ChatApplication", "Login failed: ${throwable.message}")
                 throwable.printStackTrace()
-                onFailure(throwable)
+                callback.onFailure(throwable)
             }
         })
     }

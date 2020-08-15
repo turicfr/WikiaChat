@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.progressindicator.ProgressIndicator
 import com.google.android.material.textfield.TextInputLayout
+import com.oren.wikia_chat.client.Client
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mUsernameView: TextInputLayout
@@ -17,12 +18,6 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!(application as ChatApplication).login(this) { show() }) {
-            show()
-        }
-    }
-
-    private fun show() {
         setContentView(R.layout.activity_login)
 
         mUsernameView = findViewById(R.id.username)
@@ -64,12 +59,20 @@ class LoginActivity : AppCompatActivity() {
         }
 
         mProgressIndicator.show()
-        (application as ChatApplication).login(this, username, password) { throwable ->
-            mErrorMessageView.apply {
-                text = throwable.message
-                visibility = View.VISIBLE
-            }
-            mProgressIndicator.hide()
-        }
+        (application as ChatApplication).login(
+            this,
+            username,
+            password,
+            object : Client.Callback<Unit> {
+                override fun onSuccess(value: Unit) {}
+
+                override fun onFailure(throwable: Throwable) {
+                    mErrorMessageView.apply {
+                        text = throwable.message
+                        visibility = View.VISIBLE
+                    }
+                    mProgressIndicator.hide()
+                }
+            })
     }
 }
