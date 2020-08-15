@@ -16,9 +16,10 @@ class ChatSelectionAdapter(private val mChats: MutableList<String>) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LayoutInflater
-            .from(parent.context)
-            .inflate(R.layout.chat_item, parent, false)
+        return ViewHolder(
+            LayoutInflater
+                .from(parent.context)
+                .inflate(R.layout.chat_item, parent, false)
         )
     }
 

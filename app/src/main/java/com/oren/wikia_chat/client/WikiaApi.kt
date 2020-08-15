@@ -12,8 +12,7 @@ interface WikiaApi {
     @GET("/wikia.php?controller=Chat&format=json")
     fun wikiaData(): Call<ResponseBody>
 
-    @GET("/api.php?action=query&meta=siteinfo&siprop=wikidesc&prop=info&titles=titles" +
-            "&intoken=edit&format=json")
+    @GET("/api.php?action=query&meta=siteinfo&siprop=wikidesc&prop=info&titles=titles&intoken=edit&format=json")
     fun siteInfo(): Call<ResponseBody>
 
     @FormUrlEncoded
