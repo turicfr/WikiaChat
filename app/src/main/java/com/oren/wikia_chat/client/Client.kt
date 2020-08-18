@@ -6,7 +6,6 @@ import okhttp3.ConnectionPool
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
@@ -26,7 +25,6 @@ class Client {
     private lateinit var siteInfo: JSONObject
 
     private val mHttpClient = OkHttpClient.Builder()
-        .addNetworkInterceptor(HttpLoggingInterceptor())
         /*.addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })*/
