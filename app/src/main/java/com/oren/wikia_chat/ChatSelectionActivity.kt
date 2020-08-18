@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.Client
@@ -51,13 +52,16 @@ class ChatSelectionActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<RecyclerView>(R.id.chats).apply {
+        val recyclerView = findViewById<RecyclerView>(R.id.chats).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatSelectionActivity)
             adapter = mAdapter
             addItemDecoration(
                 DividerItemDecoration(this@ChatSelectionActivity, DividerItemDecoration.VERTICAL)
             )
+        }
+        ItemTouchHelper(SwipeToDeleteCallback(this, mAdapter)).apply {
+            attachToRecyclerView(recyclerView)
         }
 
         findViewById<View>(R.id.fab).setOnClickListener {

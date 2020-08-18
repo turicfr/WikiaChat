@@ -15,6 +15,11 @@ class ChatSelectionAdapter(private val mChats: MutableList<String>) :
         this.listener = listener
     }
 
+    fun deleteItem(position: Int) {
+        mChats.removeAt(position)
+        notifyItemRemoved(position)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             LayoutInflater
