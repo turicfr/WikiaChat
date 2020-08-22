@@ -57,6 +57,10 @@ class WikiAdapter(private var mWikis: MutableList<Wiki>) :
         var logo: String
             get() = throw Exception()
             set(value) {
+                if (value.isEmpty()) {
+                    // TODO: error drawable
+                    return
+                }
                 Picasso.get()
                     .load(value)
                     .transform(CircleTransform())

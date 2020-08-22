@@ -32,7 +32,7 @@ class AutoCompleteAdapter(context: Context, textViewResourceId: Int) :
                         item.getInt("id"),
                         item.getString("name"),
                         item.getString("domain"),
-                        item.getString("wordmark"), // TODO: handle empty string
+                        item.getString("wordmark"),
                     )
                 )
             }
