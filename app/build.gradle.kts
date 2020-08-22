@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("android.extensions")
+    kotlin("kapt")
 }
 
 android {
@@ -49,7 +50,13 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.3.0-alpha07")
     implementation("androidx.preference:preference:1.1.1")
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.1.0")
+    val room_version = "2.2.5"
+    implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
     implementation("com.google.android.material:material:1.3.0-alpha02")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.8.1")

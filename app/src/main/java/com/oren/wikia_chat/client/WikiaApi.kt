@@ -3,10 +3,7 @@ package com.oren.wikia_chat.client
 import okhttp3.ResponseBody
 import org.json.JSONArray
 import retrofit2.Call
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.*
 
 interface WikiaApi {
     @GET("/wikia.php?controller=Chat&format=json")
@@ -20,5 +17,11 @@ interface WikiaApi {
     fun getPrivateRoomId(
         @Field("users") users: JSONArray,
         @Field("token") token: String
+    ): Call<ResponseBody>
+
+    // TODO: move to separate interface?
+    @GET("/api/v1/Wikis/ByString?expand=1&limit=6&includeDomain=true")
+    fun getWikis(
+        @Query("string") query: String
     ): Call<ResponseBody>
 }

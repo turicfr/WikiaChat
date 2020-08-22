@@ -7,6 +7,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import androidx.room.Room
 import com.oren.wikia_chat.client.Client
 
 class ChatApplication : Application() {
@@ -15,17 +16,19 @@ class ChatApplication : Application() {
         const val PASSWORD_KEY = "password"
     }
 
-    private lateinit var sharedPref: SharedPreferences
+    lateinit var mDatabase: AppDatabase
+    private lateinit var mSharedPreferences: SharedPreferences
     lateinit var client: Client
 
     override fun onCreate() {
         super.onCreate()
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
+        mDatabase = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "app").build()
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
     }
 
     fun login(context: Context, callback: Client.Callback<Unit>) {
-        val username = sharedPref.getString(USERNAME_KEY, null)
-        val password = sharedPref.getString(PASSWORD_KEY, null)
+        val username = mSharedPreferences.getString(USERNAME_KEY, null)
+        val password = mSharedPreferences.getString(PASSWORD_KEY, null)
         if (username == null || password == null) {
             callback.onFailure(Exception())
             return
@@ -42,11 +45,11 @@ class ChatApplication : Application() {
         client = Client()
         client.login(username, password, object : Client.Callback<Unit> {
             override fun onSuccess(value: Unit) {
-                sharedPref.edit {
+                mSharedPreferences.edit {
                     putString(USERNAME_KEY, username)
                     putString(PASSWORD_KEY, password)
                 }
-                context.startActivity(Intent(context, ChatSelectionActivity::class.java))
+                context.startActivity(Intent(context, WikiSelectionActivity::class.java))
                 callback.onSuccess(Unit)
             }
 
@@ -59,7 +62,7 @@ class ChatApplication : Application() {
     }
 
     fun logout(context: Context) {
-        sharedPref.edit {
+        mSharedPreferences.edit {
             remove(USERNAME_KEY)
             remove(PASSWORD_KEY)
         }

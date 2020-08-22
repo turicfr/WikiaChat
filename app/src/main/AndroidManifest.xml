@@ -24,7 +24,7 @@
         <activity
             android:name=".LoginActivity"
             android:windowSoftInputMode="stateVisible|adjustResize" />
-        <activity android:name=".ChatSelectionActivity" />
+        <activity android:name=".WikiSelectionActivity" />
         <activity android:name=".ChatActivity" />
 
     </application>
