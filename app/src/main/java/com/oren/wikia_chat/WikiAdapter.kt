@@ -22,16 +22,13 @@ class WikiAdapter(private var mWikis: MutableList<Wiki>) :
         notifyItemRemoved(position)
     }
 
-    // TODO: remove?
     fun getItemAtPosition(position: Int): Wiki = mWikis[position]
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(
-            LayoutInflater
-                .from(parent.context)
-                .inflate(R.layout.chat_item, parent, false)
-        )
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
+        LayoutInflater
+            .from(parent.context)
+            .inflate(R.layout.chat_item, parent, false)
+    )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val wiki = mWikis[position]

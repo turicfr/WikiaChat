@@ -18,13 +18,11 @@ class UsersAdapter(private val mUsers: List<User>) :
         this.listener = listener
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
-        return UserViewHolder(
-            LayoutInflater
-                .from(parent.context)
-                .inflate(R.layout.item_user, parent, false)
-        )
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = UserViewHolder(
+        LayoutInflater
+            .from(parent.context)
+            .inflate(R.layout.item_user, parent, false)
+    )
 
     override fun onBindViewHolder(viewHolder: UserViewHolder, position: Int) {
         val user = mUsers[position]

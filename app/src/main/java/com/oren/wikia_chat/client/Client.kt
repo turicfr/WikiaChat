@@ -84,7 +84,7 @@ class Client {
                 }
                 mUser = User(
                     username,
-                    "https://services.fandom.com/user-avatar/user/${obj.getString("user_id")}/avatar"
+                    "https://services.fandom.com/user-avatar/user/${obj.getString("user_id")}/avatar",
                 )
                 callback.onSuccess(Unit)
             }
@@ -134,7 +134,7 @@ class Client {
             .writeTimeout(5, TimeUnit.MINUTES)
             .readTimeout(5, TimeUnit.MINUTES)
             .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
-            .hostnameVerifier(HostnameVerifier { _, _ -> true })
+            .hostnameVerifier { _, _ -> true }
             .sslSocketFactory(sslContext.socketFactory, trustManager)
             .build()
         IO.setDefaultOkHttpCallFactory(okHttpClient)
@@ -152,7 +152,7 @@ class Client {
     fun openPrivateChat(user: User, callback: Callback<Room>) {
         wikiaApi.getPrivateRoomId(
             JSONArray(listOf(mUser.name, user.name)),
-            siteInfo.getJSONObject("pages").getJSONObject("-1").getString("edittoken")
+            siteInfo.getJSONObject("pages").getJSONObject("-1").getString("edittoken"),
         ).enqueue(object : ObjectCallback<Room>(callback) {
             override fun onObject(obj: JSONObject) {
                 val roomId = obj.getInt("id")
@@ -164,6 +164,8 @@ class Client {
     }
 
     fun logout() {
-        mRooms.values.forEach { it.disconnect() }
+        mRooms.values.forEach {
+            it.disconnect()
+        }
     }
 }

@@ -8,4 +8,6 @@
     <color name="colorIndicator">#3366CC</color>
 
     <color name="colorError">#FF0000</color>
+
+    <color name="colorDelete">#D93025</color>
 </resources>

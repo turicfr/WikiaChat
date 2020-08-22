@@ -16,12 +16,12 @@ interface WikiaApi {
     @POST("/index.php?action=ajax&rs=ChatAjax&method=getPrivateRoomID")
     fun getPrivateRoomId(
         @Field("users") users: JSONArray,
-        @Field("token") token: String
+        @Field("token") token: String,
     ): Call<ResponseBody>
 
     // TODO: move to separate interface?
     @GET("/api/v1/Wikis/ByString?expand=1&limit=6&includeDomain=true")
     fun getWikis(
-        @Query("string") query: String
+        @Query("string") query: String,
     ): Call<ResponseBody>
 }

@@ -15,8 +15,8 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
 
     var onCreateContextMenuListener: ((position: Int) -> Unit)? = null
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        when (viewType) {
             ChatItem.TYPE_MESSAGE -> MessageViewHolder(
                 LayoutInflater
                     .from(parent.context)
@@ -29,7 +29,6 @@ class ChatAdapter(private val mContext: Context, private val mChatItems: List<Ch
             )
             else -> throw RuntimeException()
         }
-    }
 
     override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder, position: Int) {
         val message = mChatItems[position]

@@ -1,4 +1,4 @@
-package com.oren.wikia_chat.client
+package com.oren.wikia_chat
 
 import android.content.Context
 import android.os.Handler

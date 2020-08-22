@@ -9,7 +9,7 @@ class Room(
     val id: Int,
     private val mUsername: String,
     private val mSocket: Socket,
-    private val parent: Room? = null
+    private val parent: Room? = null,
 ) {
     private val mUsers = mutableMapOf<String, User>()
 
@@ -21,9 +21,10 @@ class Room(
     fun connect() {
         mSocket.on(Socket.EVENT_CONNECT) {
             Log.d("Room", "connect")
-            send(JSONObject()
-                .put("msgType", "command")
-                .put("command", "initquery")
+            send(
+                JSONObject()
+                    .put("msgType", "command")
+                    .put("command", "initquery")
             )
         }
         mSocket.on(Socket.EVENT_DISCONNECT) { Log.d("Room", "disconnect") }
@@ -48,25 +49,28 @@ class Room(
     }
 
     private fun send(attrs: JSONObject) {
-        mSocket.send(JSONObject()
-            .put("id", JSONObject.NULL)
-            .put("attrs", attrs)
-            .toString()
+        mSocket.send(
+            JSONObject()
+                .put("id", JSONObject.NULL)
+                .put("attrs", attrs)
+                .toString()
         )
     }
 
     fun sendMessage(message: String) {
         if (parent !== null) {
-            parent.send(JSONObject()
-                .put("msgType", "command")
-                .put("command", "openprivate")
-                .put("roomId", id)
+            parent.send(
+                JSONObject()
+                    .put("msgType", "command")
+                    .put("command", "openprivate")
+                    .put("roomId", id)
             )
         }
-        send(JSONObject()
-            .put("msgType", "chat")
-            .put("name", mUsername)
-            .put("text", message)
+        send(
+            JSONObject()
+                .put("msgType", "chat")
+                .put("name", mUsername)
+                .put("text", message)
         )
     }
 
@@ -81,10 +85,7 @@ class Room(
     }
 
     private fun onInitial(data: JSONObject) {
-        val models = data
-            .getJSONObject("collections")
-            .getJSONObject("users")
-            .getJSONArray("models")
+        val models = data.getJSONObject("collections").getJSONObject("users").getJSONArray("models")
         for (i in 0 until models.length()) {
             updateUser(models.getJSONObject(i).getJSONObject("attrs"))
         }

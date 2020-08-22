@@ -42,26 +42,26 @@ class ChatActivity : AppCompatActivity() {
         mClient = (application as ChatApplication).client
         mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))
 
-        supportActionBar!!.apply {
-            if (mClient.wikiImageUrl.isEmpty()) {
-                title = mClient.wikiName
-            } else {
-                title = ""
-                Picasso.get()
-                    .load(mClient.wikiImageUrl)
-                    .into(object : Target {
-                        override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+        if (mClient.wikiImageUrl.isEmpty()) {
+            title = mClient.wikiName
+        } else {
+            title = ""
+            Picasso.get()
+                .load(mClient.wikiImageUrl)
+                .into(object : Target {
+                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
 
-                        override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
 
-                        override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                        supportActionBar!!.apply {
                             setIcon(BitmapDrawable(resources, bitmap))
                             setDisplayShowHomeEnabled(true)
                         }
-                    })
-            }
-            setDisplayHomeAsUpEnabled(true)
+                    }
+                })
         }
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         mChatAdapter = ChatAdapter(this, mChatItems).apply {
             onCreateContextMenuListener = { position -> mCurrentItemPosition = position }
@@ -109,8 +109,8 @@ class ChatActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.context_menu, menu)
     }
 
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    override fun onContextItemSelected(item: MenuItem) =
+        when (item.itemId) {
             R.id.private_chat -> {
                 val chatItem = mChatItems[mCurrentItemPosition] as ChatItem.Message
                 openPrivateChat(chatItem.user)
@@ -118,7 +118,6 @@ class ChatActivity : AppCompatActivity() {
             }
             else -> super.onContextItemSelected(item)
         }
-    }
 
     private fun openPrivateChat(user: User) {
         mClient.openPrivateChat(user, object : Client.Callback<Room> {
@@ -141,8 +140,8 @@ class ChatActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem) =
+        when (item.itemId) {
             android.R.id.home -> {
                 finish()
                 true
@@ -157,7 +156,6 @@ class ChatActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
 
     private fun showParticipants() {
         val view = layoutInflater.inflate(R.layout.dialog_users, null)

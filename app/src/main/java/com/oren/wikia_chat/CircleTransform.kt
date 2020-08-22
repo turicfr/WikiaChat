@@ -22,7 +22,8 @@ class CircleTransform : Transformation {
         val paint = Paint().apply {
             shader = BitmapShader(
                 squaredBitmap,
-                Shader.TileMode.CLAMP, Shader.TileMode.CLAMP
+                Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP,
             )
             isAntiAlias = true
         }

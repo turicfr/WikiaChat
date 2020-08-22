@@ -11,6 +11,6 @@ interface LoginApi {
     @POST("/auth/token")
     fun login(
         @Field("username") username: String,
-        @Field("password") password: String
+        @Field("password") password: String,
     ): Call<ResponseBody>
 }

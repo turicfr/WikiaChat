@@ -2,7 +2,6 @@ package com.oren.wikia_chat
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -12,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 class SwipeToDeleteCallback(private val context: Context, private val adapter: WikiAdapter) :
     ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
     private val icon = ContextCompat.getDrawable(context, R.drawable.ic_baseline_clear_24)!!
-    private val background = ColorDrawable(Color.parseColor("#D93025")) // TODO: extract color
+    private val background = ColorDrawable(ContextCompat.getColor(context, R.color.colorDelete))
 
     override fun onMove(
         recyclerView: RecyclerView,
@@ -35,10 +34,8 @@ class SwipeToDeleteCallback(private val context: Context, private val adapter: W
         dX: Float,
         dY: Float,
         actionState: Int,
-        isCurrentlyActive: Boolean
+        isCurrentlyActive: Boolean,
     ) {
-        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-
         val itemView = viewHolder.itemView
 
         val iconMargin = (itemView.height - icon.intrinsicHeight) / 2
@@ -64,5 +61,7 @@ class SwipeToDeleteCallback(private val context: Context, private val adapter: W
 
         background.draw(c)
         icon.draw(c)
+
+        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 }

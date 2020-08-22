@@ -40,7 +40,7 @@ class ChatApplication : Application() {
         context: Context,
         username: String,
         password: String,
-        callback: Client.Callback<Unit>
+        callback: Client.Callback<Unit>,
     ) {
         client = Client()
         client.login(username, password, object : Client.Callback<Unit> {

@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.Client
-import com.oren.wikia_chat.client.DelayAutoCompleteTextView
 import com.oren.wikia_chat.client.Room
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
@@ -28,7 +27,7 @@ import kotlinx.coroutines.runBlocking
 class WikiSelectionActivity : AppCompatActivity() {
     private lateinit var mClient: Client
     private lateinit var mAdapter: WikiAdapter
-    private lateinit var mChatData: MutableList<Wiki>
+    private lateinit var mWikis: MutableList<Wiki>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +38,6 @@ class WikiSelectionActivity : AppCompatActivity() {
 
         // TODO
         supportActionBar!!.setDisplayShowHomeEnabled(true)
-        Log.d("Chat", mClient.user.avatarUri.toString())
         if (mClient.user.avatarUri.toString().isNotEmpty()) {
             Picasso.get()
                 .load(mClient.user.avatarUri)
@@ -69,10 +67,9 @@ class WikiSelectionActivity : AppCompatActivity() {
         }
 
         runBlocking {
-            mChatData =
-                (application as ChatApplication).mDatabase.wikiDao().getAll().toMutableList()
+            mWikis = (application as ChatApplication).mDatabase.wikiDao().getAll().toMutableList()
         }
-        mAdapter = WikiAdapter(mChatData).apply {
+        mAdapter = WikiAdapter(mWikis).apply {
             setOnClickListener(::choose)
         }
 
@@ -84,9 +81,7 @@ class WikiSelectionActivity : AppCompatActivity() {
                 DividerItemDecoration(this@WikiSelectionActivity, DividerItemDecoration.VERTICAL)
             )
         }
-        ItemTouchHelper(SwipeToDeleteCallback(this, mAdapter)).apply {
-            attachToRecyclerView(recyclerView)
-        }
+        ItemTouchHelper(SwipeToDeleteCallback(this, mAdapter)).attachToRecyclerView(recyclerView)
 
         findViewById<View>(R.id.fab).setOnClickListener {
             openDialog()
@@ -98,26 +93,25 @@ class WikiSelectionActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem) =
+        when (item.itemId) {
             R.id.action_logout -> {
                 (application as ChatApplication).logout(this)
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
 
     private fun openDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_chat, null)
 
         var wiki: Wiki? = null
         val button = AlertDialog.Builder(this)
-            .setTitle("Add chat")
+            .setTitle("Add Wiki") // TODO: extract string
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                mChatData.add(wiki!!)
-                mAdapter.notifyItemInserted(mChatData.size - 1)
+                mWikis.add(wiki!!)
+                mAdapter.notifyItemInserted(mWikis.size - 1)
                 runBlocking {
                     (application as ChatApplication).mDatabase.wikiDao().insert(wiki!!)
                 }
