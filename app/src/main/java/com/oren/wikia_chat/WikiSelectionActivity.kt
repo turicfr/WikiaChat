@@ -32,7 +32,7 @@ class WikiSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat_selection)
+        setContentView(R.layout.activity_wiki_selection)
 
         mClient = (application as ChatApplication).client
         findViewById<TextView>(R.id.username).text = mClient.user.name
