@@ -2,7 +2,9 @@ package com.oren.wikia_chat
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Editable
@@ -14,6 +16,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -80,6 +83,50 @@ class WikiSelectionActivity : AppCompatActivity() {
             addItemDecoration(
                 DividerItemDecoration(this@WikiSelectionActivity, DividerItemDecoration.VERTICAL)
             )
+            addItemDecoration(object : RecyclerView.ItemDecoration() {
+                private var itemCount = 0
+                private val background =
+                    ColorDrawable(ContextCompat.getColor(context, R.color.colorDelete))
+
+                override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+                    if (parent.itemAnimator!!.isRunning && (state.itemCount <= itemCount || itemCount == 0)) {
+                        itemCount = state.itemCount
+
+                        var lastViewComingDown: View? = null
+                        var firstViewComingUp: View? = null
+
+                        val childCount = parent.layoutManager!!.childCount
+                        for (i in 0 until childCount) {
+                            val child = parent.layoutManager!!.getChildAt(i)!!
+                            if (child.translationY < 0) {
+                                lastViewComingDown = child
+                            } else if (child.translationY > 0 && firstViewComingUp == null) {
+                                firstViewComingUp = child
+                            }
+                        }
+
+                        var top = 0
+                        var bottom = 0
+                        if (lastViewComingDown != null && firstViewComingUp != null) {
+                            top =
+                                lastViewComingDown.bottom + lastViewComingDown.translationY.toInt()
+                            bottom = firstViewComingUp.top + firstViewComingUp.translationY.toInt()
+                        } else if (lastViewComingDown != null) {
+                            top =
+                                lastViewComingDown.bottom + lastViewComingDown.translationY.toInt()
+                            bottom = lastViewComingDown.bottom
+                        } else if (firstViewComingUp != null) {
+                            top = firstViewComingUp.top
+                            bottom = firstViewComingUp.top + firstViewComingUp.translationY.toInt()
+                        }
+
+                        background.setBounds(0, top, parent.width, bottom)
+                        background.draw(c)
+                    }
+
+                    super.onDraw(c, parent, state)
+                }
+            })
         }
         ItemTouchHelper(SwipeToDeleteCallback(this, mAdapter)).attachToRecyclerView(recyclerView)
 
