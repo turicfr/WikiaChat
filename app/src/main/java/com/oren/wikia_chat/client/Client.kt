@@ -52,22 +52,24 @@ class Client {
 
     private abstract class ObjectCallback<T>(private val callback: Callback<T>) :
         retrofit2.Callback<ResponseBody> {
-        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+        final override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
             val body = if (response.isSuccessful) response.body() else response.errorBody()
             val obj = JSONObject(body?.string()!!)
             try {
-                onObject(obj)
+                if (response.isSuccessful) onObject(obj) else onFailure(obj)
             } catch (e: Throwable) {
                 callback.onFailure(e)
                 return
             }
         }
 
-        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+        final override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
             callback.onFailure(t)
         }
 
-        abstract fun onObject(obj: JSONObject)
+        protected abstract fun onObject(obj: JSONObject)
+
+        protected open fun onFailure(obj: JSONObject): Unit = throw Exception()
     }
 
     fun login(username: String, password: String, callback: Callback<Unit>) {
@@ -78,15 +80,15 @@ class Client {
         val loginApi = retrofit.create(LoginApi::class.java)
         loginApi.login(username, password).enqueue(object : ObjectCallback<Unit>(callback) {
             override fun onObject(obj: JSONObject) {
-                if (obj.has("error")) {
-                    throw Exception(obj.getString("error_description"))
-                }
                 mUser = User(
                     username,
                     "https://services.fandom.com/user-avatar/user/${obj.getString("user_id")}/avatar",
                 )
                 callback.onSuccess(Unit)
             }
+
+            override fun onFailure(obj: JSONObject) =
+                throw Exception(obj.getString("error_description"))
         })
     }
 

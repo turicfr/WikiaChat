@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -198,8 +199,11 @@ class WikiSelectionActivity : AppCompatActivity() {
             }
 
             override fun onFailure(throwable: Throwable) {
-                Log.e("WikiSelectionActivity", "init failed: ${throwable.message}")
-                throwable.printStackTrace()
+                Toast.makeText(
+                    this@WikiSelectionActivity,
+                    R.string.error_chat_not_enabled,
+                    Toast.LENGTH_SHORT,
+                ).show()
             }
         })
     }

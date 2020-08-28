@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_chat_not_enabled">This wiki does not have chats enabled</string>
+</resources>

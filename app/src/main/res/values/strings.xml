@@ -1,9 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Wikia Chat</string>
     <string name="login">Login</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
-    <string name="error_field_required">This field is required</string>
 
     <string name="message_prompt">Type a message</string>
     <string name="message_user_joined">%s has joined</string>
