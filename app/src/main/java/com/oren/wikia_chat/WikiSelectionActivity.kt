@@ -13,7 +13,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -37,37 +36,37 @@ class WikiSelectionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_wiki_selection)
 
         mClient = (application as ChatApplication).client
-        findViewById<TextView>(R.id.username).text = mClient.user.name
 
+        supportActionBar!!.title = mClient.user.name
         // TODO
-        supportActionBar!!.setDisplayShowHomeEnabled(true)
-        if (mClient.user.avatarUri.toString().isNotEmpty()) {
-            Picasso.get()
-                .load(mClient.user.avatarUri)
-                .transform(CircleTransform())
-                .into(object : Target {
-                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                        Log.d("onPrepareLoad", "Error!!! $placeHolderDrawable")
-                    }
+        Picasso.get()
+            // .load(mClient.user.avatarUri)
+            .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
+            .resize(72, 72)
+            .transform(CircleTransform())
+            .into(object : Target {
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                    Log.d("onPrepareLoad", "Error!!! $placeHolderDrawable")
+                }
 
-                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                        Log.d("onBitmapFailed", "Error!!! $e, $errorDrawable")
-                        supportActionBar!!.setIcon(
-                            errorDrawable,
-                            /*BitmapDrawable(
-                                resources
-                                Picasso.get()
-                                    .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
-                                    .get()
-                            )*/
+                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                    Log.d("onBitmapFailed", "Error!!! $e, $errorDrawable")
+                    /*supportActionBar!!.setIcon(errorDrawable)*/
+                    /*supportActionBar!!.setIcon(
+                        BitmapDrawable(
+                            resources
+                            Picasso.get()
+                                .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
+                                .get()
                         )
-                    }
+                    )*/
+                }
 
-                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                        supportActionBar!!.setIcon(BitmapDrawable(resources, bitmap))
-                    }
-                })
-        }
+                override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                    supportActionBar!!.setDisplayShowHomeEnabled(true)
+                    supportActionBar!!.setIcon(BitmapDrawable(resources, bitmap))
+                }
+            })
 
         runBlocking {
             mWikis = (application as ChatApplication).mDatabase.wikiDao().getAll().toMutableList()
