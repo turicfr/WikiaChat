@@ -9,6 +9,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import androidx.room.Room
 import com.oren.wikia_chat.client.Client
+import kotlinx.coroutines.runBlocking
 
 class ChatApplication : Application() {
     private companion object {
@@ -62,6 +63,9 @@ class ChatApplication : Application() {
     }
 
     fun logout(context: Context) {
+        runBlocking {
+            mDatabase.wikiDao().deleteAll()
+        }
         mSharedPreferences.edit {
             remove(USERNAME_KEY)
             remove(PASSWORD_KEY)

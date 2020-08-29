@@ -15,4 +15,7 @@ interface WikiDao {
 
     @Delete
     suspend fun delete(wiki: Wiki)
+
+    @Query("DELETE FROM wikis")
+    suspend fun deleteAll()
 }
