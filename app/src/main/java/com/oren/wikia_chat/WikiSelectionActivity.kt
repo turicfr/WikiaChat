@@ -13,7 +13,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -21,6 +20,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.oren.wikia_chat.client.Client
 import com.oren.wikia_chat.client.Room
 import com.squareup.picasso.Picasso
@@ -76,7 +76,7 @@ class WikiSelectionActivity : AppCompatActivity() {
             setOnClickListener(::choose)
         }
 
-        val recyclerView = findViewById<RecyclerView>(R.id.chats).apply {
+        val recyclerView = findViewById<RecyclerView>(R.id.wikis).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@WikiSelectionActivity)
             adapter = mAdapter
@@ -199,10 +199,10 @@ class WikiSelectionActivity : AppCompatActivity() {
             }
 
             override fun onFailure(throwable: Throwable) {
-                Toast.makeText(
-                    this@WikiSelectionActivity,
+                Snackbar.make(
+                    findViewById(R.id.coordinator),
                     R.string.error_chat_not_enabled,
-                    Toast.LENGTH_SHORT,
+                    Snackbar.LENGTH_SHORT,
                 ).show()
             }
         })
