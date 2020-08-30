@@ -154,7 +154,7 @@ class WikiSelectionActivity : AppCompatActivity() {
 
         var wiki: Wiki? = null
         val button = AlertDialog.Builder(this)
-            .setTitle("Add Wiki") // TODO: extract string
+            .setTitle(R.string.add_wiki)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 mWikis.add(wiki!!)

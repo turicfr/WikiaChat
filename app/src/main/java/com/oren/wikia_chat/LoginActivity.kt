@@ -6,6 +6,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.ProgressIndicator
 import com.google.android.material.textfield.TextInputLayout
 import com.oren.wikia_chat.client.Client
@@ -42,7 +43,7 @@ class LoginActivity : AppCompatActivity() {
     private fun attemptLogin() {
         mUsernameView.error = null
         mPasswordView.error = null
-        mErrorMessageView.visibility = View.GONE
+        mErrorMessageView.isVisible = false
 
         val username = mUsernameView.editText!!.text.toString()
         val password = mPasswordView.editText!!.text.toString()
