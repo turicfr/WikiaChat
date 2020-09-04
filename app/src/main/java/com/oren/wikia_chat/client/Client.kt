@@ -43,7 +43,14 @@ class Client {
     val user: User
         get() = mUser
 
-    fun getRoom(id: Int) = mRooms[id]!!
+    fun getRoom(id: Int) = mRooms[id]
+
+    fun addPrivateRoom(id: Int): Room {
+        val room = Room(id, mUser.name, createSocket(id), mMainRoom)
+        mMainRoom.privateRooms!!.add(room)
+        mRooms[id] = room
+        return room
+    }
 
     interface Callback<T> {
         fun onSuccess(value: T)
@@ -156,10 +163,7 @@ class Client {
             siteInfo.getJSONObject("pages").getJSONObject("-1").getString("edittoken"),
         ).enqueue(object : ObjectCallback<Room>(callback) {
             override fun onObject(obj: JSONObject) {
-                val roomId = obj.getInt("id")
-                val room = Room(roomId, mUser.name, createSocket(roomId), mMainRoom)
-                mRooms[roomId] = room
-                callback.onSuccess(room)
+                callback.onSuccess(addPrivateRoom(obj.getInt("id")))
             }
         })
     }

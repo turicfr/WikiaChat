@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.User
 import com.squareup.picasso.Picasso
@@ -26,7 +27,12 @@ class UsersAdapter(private val mUsers: List<User>) :
 
     override fun onBindViewHolder(viewHolder: UserViewHolder, position: Int) {
         val user = mUsers[position]
+        val privateRoom = user.privateRoom
         viewHolder.itemView.setOnClickListener {
+            if (privateRoom != null) {
+                privateRoom.unreadMessages = 0
+            }
+            viewHolder.unread = false
             listener?.invoke(user)
         }
         viewHolder.username = user.name
@@ -34,6 +40,7 @@ class UsersAdapter(private val mUsers: List<User>) :
             .load(user.avatarUri)
             .transform(CircleTransform())
             .into(viewHolder.avatar)
+        viewHolder.unread = privateRoom != null && privateRoom.unreadMessages > 0
     }
 
     override fun getItemCount() = mUsers.size
@@ -41,11 +48,18 @@ class UsersAdapter(private val mUsers: List<User>) :
     class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mUsernameView = itemView.findViewById<TextView>(R.id.username)
         val avatar: ImageView = itemView.findViewById(R.id.avatar)
+        private val mUnreadMessageBadge: View = itemView.findViewById(R.id.badge)
 
         var username: String
             get() = mUsernameView.text.toString()
             set(value) {
                 mUsernameView.text = value
+            }
+
+        var unread: Boolean
+            get() = mUnreadMessageBadge.isVisible
+            set(value) {
+                mUnreadMessageBadge.isVisible = value
             }
     }
 }

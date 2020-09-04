@@ -12,6 +12,13 @@ class Room(
     private val parent: Room? = null,
 ) {
     private val mUsers = mutableMapOf<String, User>()
+    val privateRooms = if (isPrivate) null else mutableListOf<Room>()
+    var unreadMessages = 0
+
+    val isPrivate: Boolean
+        get() {
+            return parent != null
+        }
 
     val users: List<User>
         get() = mUsers.values.toList()
@@ -33,7 +40,7 @@ class Room(
         onEvent("initial", ::onInitial)
         onEvent("join") { data -> updateUser(data.getJSONObject("attrs")) }
         onEvent("updateUser") { data -> updateUser(data.getJSONObject("attrs")) }
-        onEvent("openPrivateRoom") { data -> onOpenPrivateRoom(data.getJSONObject("attrs")) }
+        onEvent("chat:add") { onMessage() }
         onEvent("part") { data -> onLogout(data.getJSONObject("attrs")) }
         onEvent("logout") { data -> onLogout(data.getJSONObject("attrs")) }
         mSocket.connect()
@@ -58,8 +65,9 @@ class Room(
     }
 
     fun sendMessage(message: String) {
-        if (parent !== null) {
-            parent.send(
+        if (isPrivate) {
+            // TODO: contract
+            parent!!.send(
                 JSONObject()
                     .put("msgType", "command")
                     .put("command", "openprivate")
@@ -94,18 +102,20 @@ class Room(
     private fun updateUser(attrs: JSONObject) {
         // TODO: Rank
         val username = attrs.getString("name")
-        val avatarUri = Uri.parse(attrs.getString("avatarSrc"))
+        var avatarUri = Uri.parse(attrs.getString("avatarSrc"))
         val segments = avatarUri.pathSegments.slice(0 until avatarUri.pathSegments.size - 2)
-        mUsers[username.toLowerCase()] =
-            User(username, avatarUri.buildUpon().path(segments.joinToString("/")).build())
+        avatarUri = avatarUri.buildUpon().path(segments.joinToString("/")).build()
+        updateUser(User(username, avatarUri))
     }
+
+    private fun updateUser(user: User) {
+        mUsers[user.name.toLowerCase()] = user
+    }
+
+    private fun onMessage() = unreadMessages++
 
     private fun onLogout(attrs: JSONObject) {
         val username = attrs.getString("name")
         mUsers.remove(username.toLowerCase())
-    }
-
-    private fun onOpenPrivateRoom(attrs: JSONObject) {
-        // TODO: Show new private message
     }
 }

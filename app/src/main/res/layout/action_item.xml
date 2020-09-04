@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@android:style/Widget.ActionButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:animateLayoutChanges="true"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="0dp"
+        android:src="@drawable/ic_baseline_people_24" />
+
+    <View
+        android:id="@+id/badge"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_alignTop="@+id/icon"
+        android:layout_alignEnd="@+id/icon"
+        android:layout_marginTop="-5dp"
+        android:layout_marginEnd="-5dp"
+        android:background="@android:drawable/ic_notification_overlay"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</RelativeLayout>

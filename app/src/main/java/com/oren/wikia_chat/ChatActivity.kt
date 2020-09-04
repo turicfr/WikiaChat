@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,6 +33,8 @@ class ChatActivity : AppCompatActivity() {
     private var mCurrentItemPosition = 0
     private lateinit var mInputMessageView: EditText
 
+    private lateinit var mUnreadMessageBadge: View
+
     private lateinit var mClient: Client
     private lateinit var mRoom: Room
 
@@ -40,7 +43,7 @@ class ChatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_chat)
 
         mClient = (application as ChatApplication).client
-        mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))
+        mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))!!
 
         if (mClient.wikiImageUrl.isEmpty()) {
             title = mClient.wikiName
@@ -97,6 +100,7 @@ class ChatActivity : AppCompatActivity() {
             onEvent("kick") { data -> runOnUiThread { onKick(data) } }
             onEvent("ban") { data -> runOnUiThread { onBan(data) } }
             onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            onEvent("openPrivateRoom") { data -> runOnUiThread { onOpenPrivateRoom(data) } }
             connect()
         }
     }
@@ -136,7 +140,14 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_chat, menu)
+        val menuItem = menu!!.findItem(R.id.action_participants)
+        mUnreadMessageBadge = menuItem.actionView.findViewById(R.id.badge)
+        // this is necessary because the item in menu_chat has app:actionLayout
+        menuItem.actionView.setOnClickListener {
+            onOptionsItemSelected(menuItem)
+        }
         menuInflater.inflate(R.menu.menu_logout, menu)
+        setupBadge()
         return true
     }
 
@@ -163,7 +174,10 @@ class ChatActivity : AppCompatActivity() {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = UsersAdapter(mRoom.users).apply {
-                setOnClickListener { user -> openPrivateChat(user) }
+                setOnClickListener { user ->
+                    setupBadge()
+                    openPrivateChat(user)
+                }
             }
             addItemDecoration(
                 DividerItemDecoration(this@ChatActivity, DividerItemDecoration.VERTICAL)
@@ -179,6 +193,15 @@ class ChatActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mRoom.disconnect()
+    }
+
+    private fun setupBadge() {
+        if (!mRoom.isPrivate) {
+            // TODO: contract
+            val count = mRoom.privateRooms!!.sumBy { it.unreadMessages }
+            mUnreadMessageBadge.isVisible = count != 0
+            // mUnreadMessageBadge.text = count.coerceAtMost(99)
+        }
     }
 
     private fun addLog(message: String) {
@@ -235,5 +258,26 @@ class ChatActivity : AppCompatActivity() {
     private fun onJoin(data: JSONObject) {
         val username = data.getJSONObject("attrs").getString("name")
         addLog(resources.getString(R.string.message_user_joined, username))
+    }
+
+    private fun onOpenPrivateRoom(data: JSONObject) {
+        mUnreadMessageBadge.isVisible = true
+
+        val users = data.getJSONObject("attrs").getJSONArray("users")
+        var user: User? = null
+        for (i in 0 until users.length()) {
+            val username = users.getString(i)
+            if (username != mClient.user.name) {
+                user = mRoom.getUser(username)
+                break
+            }
+        }
+
+        val roomId = data.getJSONObject("attrs").getInt("roomId")
+        val room = mClient.getRoom(roomId) ?: mClient.addPrivateRoom(roomId)
+        room.unreadMessages++
+        user!!.privateRoom = room
+        // TODO: always call connect?
+        room.connect()
     }
 }
