@@ -24,7 +24,9 @@
         <activity
             android:name=".LoginActivity"
             android:windowSoftInputMode="stateVisible|adjustResize" />
-        <activity android:name=".WikiSelectionActivity" />
+        <activity
+            android:name=".WikiSelectionActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".ChatActivity" />
 
     </application>

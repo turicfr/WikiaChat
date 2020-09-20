@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -38,34 +37,43 @@ class WikiSelectionActivity : AppCompatActivity() {
 
         mClient = (application as ChatApplication).client
 
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar!!.title = mClient.user.name
-        // TODO
+
+        var loaded = false
         Picasso.get()
-            // .load(mClient.user.avatarUri)
             .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
-            .resize(72, 72)
+            .resize(96, 96)
             .transform(CircleTransform())
             .into(object : Target {
-                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                    Log.d("onPrepareLoad", "Error!!! $placeHolderDrawable")
-                }
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
 
-                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                    Log.d("onBitmapFailed", "Error!!! $e, $errorDrawable")
-                    /*supportActionBar!!.setIcon(errorDrawable)*/
-                    /*supportActionBar!!.setIcon(
-                        BitmapDrawable(
-                            resources
-                            Picasso.get()
-                                .load("https://vignette.wikia.nocookie.net/messaging/images/1/19/Avatar.jpg")
-                                .get()
-                        )
-                    )*/
+                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
+
+                override fun onBitmapLoaded(
+                    bitmap: Bitmap?,
+                    from: Picasso.LoadedFrom?
+                ) {
+                    if (!loaded) {
+                        supportActionBar!!.setDisplayShowHomeEnabled(true)
+                        supportActionBar!!.setIcon(BitmapDrawable(resources, bitmap))
+                    }
                 }
+            })
+
+        Picasso.get()
+            .load(mClient.user.avatarUri)
+            .resize(96, 96)
+            .transform(CircleTransform())
+            .into(object : Target {
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+
+                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {}
 
                 override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
                     supportActionBar!!.setDisplayShowHomeEnabled(true)
                     supportActionBar!!.setIcon(BitmapDrawable(resources, bitmap))
+                    loaded = true
                 }
             })
 
