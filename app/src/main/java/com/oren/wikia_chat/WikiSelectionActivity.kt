@@ -78,7 +78,7 @@ class WikiSelectionActivity : AppCompatActivity() {
             })
 
         runBlocking {
-            mWikis = (application as ChatApplication).mDatabase.wikiDao().getAll().toMutableList()
+            mWikis = (application as ChatApplication).database.wikiDao().getAll().toMutableList()
         }
         mAdapter = WikiAdapter(mWikis).apply {
             setOnClickListener(::choose)
@@ -168,7 +168,7 @@ class WikiSelectionActivity : AppCompatActivity() {
                 mWikis.add(wiki!!)
                 mAdapter.notifyItemInserted(mWikis.size - 1)
                 runBlocking {
-                    (application as ChatApplication).mDatabase.wikiDao().insert(wiki!!)
+                    (application as ChatApplication).database.wikiDao().insert(wiki!!)
                 }
             }
             .setNegativeButton(android.R.string.cancel) { dialog, _ ->

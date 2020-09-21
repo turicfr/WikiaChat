@@ -21,7 +21,7 @@ class SwipeToDeleteCallback(private val context: Context, private val adapter: W
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         runBlocking {
-            (context.applicationContext as ChatApplication).mDatabase.wikiDao()
+            (context.applicationContext as ChatApplication).database.wikiDao()
                 .delete(adapter.getItemAtPosition(viewHolder.adapterPosition))
         }
         adapter.deleteItem(viewHolder.adapterPosition)

@@ -17,13 +17,13 @@ class ChatApplication : Application() {
         const val PASSWORD_KEY = "password"
     }
 
-    lateinit var mDatabase: AppDatabase
+    lateinit var database: AppDatabase
     private lateinit var mSharedPreferences: SharedPreferences
     lateinit var client: Client
 
     override fun onCreate() {
         super.onCreate()
-        mDatabase = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "app").build()
+        database = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "app").build()
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
     }
 
@@ -64,7 +64,7 @@ class ChatApplication : Application() {
 
     fun logout(context: Context) {
         runBlocking {
-            mDatabase.wikiDao().deleteAll()
+            database.wikiDao().deleteAll()
         }
         mSharedPreferences.edit {
             remove(USERNAME_KEY)
