@@ -59,8 +59,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.8.1")
-    implementation("com.squareup.okhttp3:okhttp-urlconnection:4.8.1")
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("com.squareup.okhttp3:okhttp-urlconnection:4.9.0")
     implementation("com.squareup.picasso:picasso:2.71828")
 
     implementation("io.socket:socket.io-client:1.0.0") {
