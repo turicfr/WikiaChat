@@ -16,7 +16,7 @@
         app:trackColor="@color/colorTrack"
         app:indicatorColor="@color/colorIndicator"
         app:growMode="incoming"
-        android:visibility="gone" />
+        android:visibility="invisible" />
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
