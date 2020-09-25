@@ -1,22 +1,12 @@
 package com.oren.wikia_chat.client
 
 import io.socket.client.IO
-import io.socket.client.Socket
-import okhttp3.ConnectionPool
-import okhttp3.JavaNetCookieJar
-import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Retrofit
-import java.net.CookieManager
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
 class Client {
     private lateinit var wikiaApi: WikiaApi
@@ -126,36 +116,14 @@ class Client {
         wikiaApi.wikiaData().enqueue(wikiDataCallback)
     }
 
-    private fun createSocket(roomId: Int): Socket {
-        val trustManager = object : X509TrustManager {
-            override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-            override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        }
-
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, arrayOf(trustManager), SecureRandom())
-
-        val okHttpClient = OkHttpClient.Builder()
-            .retryOnConnectionFailure(true)
-            .connectTimeout(5, TimeUnit.MINUTES)
-            .writeTimeout(5, TimeUnit.MINUTES)
-            .readTimeout(5, TimeUnit.MINUTES)
-            .connectionPool(ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
-            .hostnameVerifier { _, _ -> true }
-            .sslSocketFactory(sslContext.socketFactory, trustManager)
-            .build()
-        IO.setDefaultOkHttpCallFactory(okHttpClient)
-
-        return IO.socket("https://${wikiaData.getString("chatServerHost")}", IO.Options().apply {
-            callFactory = okHttpClient
+    private fun createSocket(roomId: Int) =
+        IO.socket("https://${wikiaData.getString("chatServerHost")}", IO.Options().apply {
             path = "/socket.io"
             query = "name=${mUser.name}" +
                     "&key=${wikiaData.getString("chatkey")}" +
                     "&roomId=$roomId" +
                     "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
         })
-    }
 
     fun openPrivateChat(user: User, callback: Callback<Room>) {
         wikiaApi.getPrivateRoomId(
