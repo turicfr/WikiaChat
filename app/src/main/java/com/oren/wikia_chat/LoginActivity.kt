@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.ProgressIndicator
 import com.google.android.material.textfield.TextInputLayout
-import com.oren.wikia_chat.client.Client
+import com.oren.wikia_chat.client.Controller
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mUsernameView: TextInputLayout
@@ -64,7 +64,7 @@ class LoginActivity : AppCompatActivity() {
             this,
             username,
             password,
-            object : Client.Callback<Unit> {
+            object : Controller.Callback<Unit> {
                 override fun onSuccess(value: Unit) {}
 
                 override fun onFailure(throwable: Throwable) {

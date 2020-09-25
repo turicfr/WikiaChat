@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.oren.wikia_chat.client.Client
+import com.oren.wikia_chat.client.Controller
 import com.oren.wikia_chat.client.Room
 import com.oren.wikia_chat.client.User
 import com.squareup.picasso.Picasso
@@ -35,22 +35,24 @@ class ChatActivity : AppCompatActivity() {
 
     private lateinit var mUnreadMessageBadge: View
 
-    private lateinit var mClient: Client
+    private var wikiId = 0
+    private lateinit var mController: Controller
     private lateinit var mRoom: Room
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-        mClient = (application as ChatApplication).client
-        mRoom = mClient.getRoom(intent.getIntExtra("roomId", 0))!!
+        wikiId = intent.getIntExtra("wikiId", 0)
+        mController = (application as ChatApplication).client.getController(wikiId)!!
+        mRoom = mController.getRoom(intent.getIntExtra("roomId", 0))!!
 
-        if (mClient.wikiImageUrl.isEmpty()) {
-            title = mClient.wikiName
+        if (mController.wikiImageUrl.isEmpty()) {
+            title = mController.wikiName
         } else {
             title = ""
             Picasso.get()
-                .load(mClient.wikiImageUrl)
+                .load(mController.wikiImageUrl)
                 .into(object : Target {
                     override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
 
@@ -66,7 +68,12 @@ class ChatActivity : AppCompatActivity() {
         }
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        mChatAdapter = ChatAdapter(this, mChatItems).apply {
+        if (wikiId in (application as ChatApplication).chats) {
+            mChatItems.addAll((application as ChatApplication).chats[wikiId]!!)
+        }
+
+        mChatAdapter = ChatAdapter(this).apply {
+            submitList(mChatItems)
             onCreateContextMenuListener = { position -> mCurrentItemPosition = position }
         }
 
@@ -92,15 +99,18 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        mRoom.apply {
-            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
-            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
-            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
-            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
-            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
-            onEvent("openPrivateRoom") { data -> runOnUiThread { onOpenPrivateRoom(data) } }
-            connect()
+        // TODO: check if should start chat or not better
+        if (wikiId !in (application as ChatApplication).chats) {
+            mRoom.apply {
+                onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+                onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+                onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+                onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+                onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+                onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+                onEvent("openPrivateRoom") { data -> runOnUiThread { onOpenPrivateRoom(data) } }
+                connect()
+            }
         }
     }
 
@@ -123,7 +133,7 @@ class ChatActivity : AppCompatActivity() {
         }
 
     private fun openPrivateChat(user: User) {
-        mClient.openPrivateChat(user, object : Client.Callback<Room> {
+        mController.openPrivateChat(user, object : Controller.Callback<Room> {
             override fun onSuccess(room: Room) {
                 startActivity(Intent(this@ChatActivity, ChatActivity::class.java).apply {
                     putExtra("roomId", room.id)
@@ -192,7 +202,7 @@ class ChatActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mRoom.disconnect()
+        (application as ChatApplication).chats[wikiId] = mChatItems
     }
 
     private fun setupBadge() {
@@ -267,14 +277,14 @@ class ChatActivity : AppCompatActivity() {
         var user: User? = null
         for (i in 0 until users.length()) {
             val username = users.getString(i)
-            if (username != mClient.user.name) {
+            if (username != mController.user.name) {
                 user = mRoom.getUser(username)
                 break
             }
         }
 
         val roomId = data.getJSONObject("attrs").getInt("roomId")
-        val room = mClient.getRoom(roomId) ?: mClient.addPrivateRoom(roomId)
+        val room = mController.getRoom(roomId) ?: mController.addPrivateRoom(roomId)
         room.unreadMessages++
         user!!.privateRoom = room
         // TODO: always call connect?

@@ -21,14 +21,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.oren.wikia_chat.client.Client
-import com.oren.wikia_chat.client.Room
-import com.oren.wikia_chat.client.User
+import com.oren.wikia_chat.client.Controller
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.coroutines.runBlocking
 
 class WikiSelectionActivity : AppCompatActivity() {
-    private lateinit var mUser: User
+    private lateinit var mClient: Client
     private lateinit var mAdapter: WikiAdapter
     private lateinit var mWikis: MutableList<Wiki>
 
@@ -36,10 +35,10 @@ class WikiSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wiki_selection)
 
-        mUser = (application as ChatApplication).user
+        mClient = (application as ChatApplication).client
 
         setSupportActionBar(findViewById(R.id.toolbar))
-        supportActionBar!!.title = mUser.name
+        supportActionBar!!.title = mClient.user.name
 
         var loaded = false
         Picasso.get()
@@ -63,7 +62,7 @@ class WikiSelectionActivity : AppCompatActivity() {
             })
 
         Picasso.get()
-            .load(mUser.avatarUri)
+            .load(mClient.user.avatarUri)
             .resize(96, 96)
             .transform(CircleTransform())
             .into(object : Target {
@@ -203,40 +202,36 @@ class WikiSelectionActivity : AppCompatActivity() {
     }
 
     private fun choose(wiki: Wiki) {
-        val client = (application as ChatApplication).clients[wiki.id]
+        val client = (application as ChatApplication).client.getController(wiki.id)
         if (client != null) {
             startActivity(
                 Intent(this@WikiSelectionActivity, ChatActivity::class.java).apply {
                     putExtra("wikiId", wiki.id)
-                    putExtra("roomId", client.mMainRoom.id)
+                    putExtra("roomId", client.mainRoom.id)
                 }
             )
         } else {
-            (application as ChatApplication).clients[wiki.id] = Client().apply {
-                username = mUser.name
-                init(
-                    this@WikiSelectionActivity,
-                    "https://${wiki.domain}/",
-                    object : Client.Callback<Room> {
-                        override fun onSuccess(room: Room) {
-                            startActivity(
-                                Intent(this@WikiSelectionActivity, ChatActivity::class.java).apply {
-                                    putExtra("wikiId", wiki.id)
-                                    putExtra("roomId", room.id)
-                                }
-                            )
-                        }
-
-                        override fun onFailure(throwable: Throwable) {
-                            Snackbar.make(
-                                findViewById(R.id.coordinator),
-                                R.string.error_chat_not_enabled,
-                                Snackbar.LENGTH_SHORT,
-                            ).show()
-                        }
+            (application as ChatApplication).client.addController(
+                wiki.id,
+                "https://${wiki.domain}/",
+                object : Controller.Callback<Controller> {
+                    override fun onSuccess(controller: Controller) {
+                        startActivity(
+                            Intent(this@WikiSelectionActivity, ChatActivity::class.java).apply {
+                                putExtra("wikiId", wiki.id)
+                                putExtra("roomId", controller.mainRoom.id)
+                            }
+                        )
                     }
-                )
-            }
+
+                    override fun onFailure(throwable: Throwable) {
+                        Snackbar.make(
+                            findViewById(R.id.coordinator),
+                            R.string.error_chat_not_enabled,
+                            Snackbar.LENGTH_SHORT,
+                        ).show()
+                    }
+                })
         }
     }
 }

@@ -1,83 +1,41 @@
 package com.oren.wikia_chat.client
 
-import io.socket.client.IO
-import okhttp3.ResponseBody
-import org.json.JSONArray
+import okhttp3.JavaNetCookieJar
+import okhttp3.OkHttpClient
 import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Response
 import retrofit2.Retrofit
+import java.net.CookieManager
 
 class Client {
-    private lateinit var wikiaApi: WikiaApi
-    private lateinit var wikiaData: JSONObject
-    private lateinit var siteInfo: JSONObject
-
-    private val mHttpClient = OkHttpClient.Builder()
+    private val httpClient = OkHttpClient.Builder()
         /*.addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })*/
         .cookieJar(JavaNetCookieJar(CookieManager()))
         .build()
 
-    private lateinit var mUser: User
-    private lateinit var mMainRoom: Room
-    private val mRooms = mutableMapOf<Int, Room>()
+    lateinit var user: User
+        private set
 
-    val wikiName: String
-        get() = wikiaData.getJSONObject("themeSettings").getString("wordmark-text")
+    private val controllers = mutableMapOf<Int, Controller>()
 
-    val wikiImageUrl: String
-        get() = wikiaData.getJSONObject("themeSettings").getString("wordmark-image-url")
+    fun getController(wikId: Int) = controllers[wikId]
 
-    val user: User
-        get() = mUser
-
-    fun getRoom(id: Int) = mRooms[id]
-
-    fun addPrivateRoom(id: Int): Room {
-        val room = Room(id, mUser.name, createSocket(id), mMainRoom)
-        mMainRoom.privateRooms!!.add(room)
-        mRooms[id] = room
-        return room
-    }
-
-    interface Callback<T> {
-        fun onSuccess(value: T)
-        fun onFailure(throwable: Throwable)
-    }
-
-    private abstract class ObjectCallback<T>(private val callback: Callback<T>) :
-        retrofit2.Callback<ResponseBody> {
-        final override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-            val body = if (response.isSuccessful) response.body() else response.errorBody()
-            val obj = JSONObject(body?.string()!!)
-            try {
-                if (response.isSuccessful) onObject(obj) else onFailure(obj)
-            } catch (e: Throwable) {
-                callback.onFailure(e)
-                return
-            }
+    fun addController(wikiId: Int, wikiUrl: String, callback: Controller.Callback<Controller>) {
+        controllers[wikiId] = Controller(this).apply {
+            init(httpClient, wikiUrl, callback)
         }
-
-        final override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-            callback.onFailure(t)
-        }
-
-        protected abstract fun onObject(obj: JSONObject)
-
-        protected open fun onFailure(obj: JSONObject): Unit = throw Exception()
     }
 
-    fun login(username: String, password: String, callback: Callback<Unit>) {
+    fun login(username: String, password: String, callback: Controller.Callback<Unit>) {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://services.fandom.com/")
-            .client(mHttpClient)
+            .client(httpClient)
             .build()
         val loginApi = retrofit.create(LoginApi::class.java)
         loginApi.login(username, password).enqueue(object : ObjectCallback<Unit>(callback) {
             override fun onObject(obj: JSONObject) {
-                mUser = User(
+                user = User(
                     username,
                     "https://services.fandom.com/user-avatar/user/${obj.getString("user_id")}/avatar",
                 )
@@ -89,56 +47,9 @@ class Client {
         })
     }
 
-    fun init(url: String, callback: Callback<Room>) {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(url)
-            .client(mHttpClient)
-            .build()
-        wikiaApi = retrofit.create(WikiaApi::class.java)
-
-        val siteInfoCallback = object : ObjectCallback<Room>(callback) {
-            override fun onObject(obj: JSONObject) {
-                siteInfo = obj.getJSONObject("query")
-                val roomId = wikiaData.getInt("roomId")
-                mMainRoom = Room(roomId, mUser.name, createSocket(roomId))
-                mRooms[roomId] = mMainRoom
-                callback.onSuccess(mMainRoom)
-            }
-        }
-
-        val wikiDataCallback = object : ObjectCallback<Room>(callback) {
-            override fun onObject(obj: JSONObject) {
-                wikiaData = obj
-                wikiaApi.siteInfo().enqueue(siteInfoCallback)
-            }
-        }
-
-        wikiaApi.wikiaData().enqueue(wikiDataCallback)
-    }
-
-    private fun createSocket(roomId: Int) =
-        IO.socket("https://${wikiaData.getString("chatServerHost")}", IO.Options().apply {
-            path = "/socket.io"
-            query = "name=${mUser.name}" +
-                    "&key=${wikiaData.getString("chatkey")}" +
-                    "&roomId=$roomId" +
-                    "&serverId=${siteInfo.getJSONObject("wikidesc").getString("id")}"
-        })
-
-    fun openPrivateChat(user: User, callback: Callback<Room>) {
-        wikiaApi.getPrivateRoomId(
-            JSONArray(listOf(mUser.name, user.name)),
-            siteInfo.getJSONObject("pages").getJSONObject("-1").getString("edittoken"),
-        ).enqueue(object : ObjectCallback<Room>(callback) {
-            override fun onObject(obj: JSONObject) {
-                callback.onSuccess(addPrivateRoom(obj.getInt("id")))
-            }
-        })
-    }
-
     fun logout() {
-        mRooms.values.forEach {
-            it.disconnect()
+        controllers.values.forEach {
+            it.logout()
         }
     }
 }

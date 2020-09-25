@@ -9,6 +9,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import androidx.room.Room
 import com.oren.wikia_chat.client.Client
+import com.oren.wikia_chat.client.Controller
 import kotlinx.coroutines.runBlocking
 
 class ChatApplication : Application() {
@@ -17,9 +18,10 @@ class ChatApplication : Application() {
         const val PASSWORD_KEY = "password"
     }
 
-    lateinit var database: AppDatabase
     private lateinit var mSharedPreferences: SharedPreferences
-    lateinit var client: Client
+    lateinit var database: AppDatabase
+    val client = Client()
+    val chats = mutableMapOf<Int, MutableList<ChatItem>>()
 
     override fun onCreate() {
         super.onCreate()
@@ -27,7 +29,7 @@ class ChatApplication : Application() {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
     }
 
-    fun login(context: Context, callback: Client.Callback<Unit>) {
+    fun login(context: Context, callback: Controller.Callback<Unit>) {
         val username = mSharedPreferences.getString(USERNAME_KEY, null)
         val password = mSharedPreferences.getString(PASSWORD_KEY, null)
         if (username == null || password == null) {
@@ -41,10 +43,9 @@ class ChatApplication : Application() {
         context: Context,
         username: String,
         password: String,
-        callback: Client.Callback<Unit>,
+        callback: Controller.Callback<Unit>,
     ) {
-        client = Client()
-        client.login(username, password, object : Client.Callback<Unit> {
+        client.login(username, password, object : Controller.Callback<Unit> {
             override fun onSuccess(value: Unit) {
                 mSharedPreferences.edit {
                     putString(USERNAME_KEY, username)
