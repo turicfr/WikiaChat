@@ -8,7 +8,11 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.runBlocking
 
-class SwipeToDeleteCallback(private val context: Context, private val adapter: WikiAdapter) :
+class SwipeToDeleteCallback(
+    private val context: Context,
+    private val wikis: MutableList<Wiki>,
+    private val adapter: WikiAdapter,
+) :
     ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
     private val icon = ContextCompat.getDrawable(context, R.drawable.ic_baseline_clear_24)!!
     private val background = ColorDrawable(ContextCompat.getColor(context, R.color.colorDelete))
@@ -22,9 +26,10 @@ class SwipeToDeleteCallback(private val context: Context, private val adapter: W
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         runBlocking {
             (context.applicationContext as ChatApplication).database.wikiDao()
-                .delete(adapter.getItemAtPosition(viewHolder.adapterPosition))
+                .delete(adapter.getItem(viewHolder.adapterPosition))
         }
-        adapter.deleteItem(viewHolder.adapterPosition)
+        wikis.removeAt(viewHolder.adapterPosition)
+        adapter.notifyItemRemoved(viewHolder.adapterPosition)
     }
 
     override fun onChildDraw(

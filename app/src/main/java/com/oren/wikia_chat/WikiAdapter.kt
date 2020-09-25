@@ -5,41 +5,35 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 
-class WikiAdapter(private var mWikis: MutableList<Wiki>) :
-    RecyclerView.Adapter<WikiAdapter.ViewHolder>() {
-
+class WikiAdapter : ListAdapter<Wiki, WikiAdapter.ViewHolder>(object : DiffUtil.ItemCallback<Wiki>() {
+    override fun areItemsTheSame(oldItem: Wiki, newItem: Wiki) = false
+    override fun areContentsTheSame(oldItem: Wiki, newItem: Wiki) = false
+}) {
     private var listener: ((Wiki) -> Unit)? = null
 
     fun setOnClickListener(listener: (Wiki) -> Unit) {
         this.listener = listener
     }
 
-    fun deleteItem(position: Int) {
-        mWikis.removeAt(position)
-        notifyItemRemoved(position)
-    }
-
-    fun getItemAtPosition(position: Int): Wiki = mWikis[position]
+    public override fun getItem(position: Int) = super.getItem(position)!!
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-        LayoutInflater
-            .from(parent.context)
-            .inflate(R.layout.wiki_item, parent, false)
+        LayoutInflater.from(parent.context).inflate(R.layout.wiki_item, parent, false)
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val wiki = mWikis[position]
+        val wiki = getItem(position)
         holder.name = wiki.name
         holder.logo = wiki.wordmarkUrl
         holder.itemView.setOnClickListener {
             listener?.invoke(wiki)
         }
     }
-
-    override fun getItemCount() = mWikis.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mTextView = itemView.findViewById<TextView>(R.id.wiki_name)

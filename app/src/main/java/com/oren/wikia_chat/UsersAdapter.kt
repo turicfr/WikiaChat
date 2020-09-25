@@ -6,12 +6,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.oren.wikia_chat.client.User
 import com.squareup.picasso.Picasso
 
-class UsersAdapter(private val mUsers: List<User>) :
-    RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
+class UsersAdapter :
+    ListAdapter<User, UsersAdapter.UserViewHolder>(object : DiffUtil.ItemCallback<User>() {
+        override fun areItemsTheSame(oldItem: User, newItem: User) = false
+        override fun areContentsTheSame(oldItem: User, newItem: User) = false
+    }) {
 
     private var listener: ((User) -> Unit)? = null
 
@@ -20,13 +25,11 @@ class UsersAdapter(private val mUsers: List<User>) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = UserViewHolder(
-        LayoutInflater
-            .from(parent.context)
-            .inflate(R.layout.item_user, parent, false)
+        LayoutInflater.from(parent.context).inflate(R.layout.item_user, parent, false)
     )
 
     override fun onBindViewHolder(viewHolder: UserViewHolder, position: Int) {
-        val user = mUsers[position]
+        val user = getItem(position)
         val privateRoom = user.privateRoom
         viewHolder.itemView.setOnClickListener {
             if (privateRoom != null) {
@@ -42,8 +45,6 @@ class UsersAdapter(private val mUsers: List<User>) :
             .into(viewHolder.avatar)
         viewHolder.unread = privateRoom != null && privateRoom.unreadMessages > 0
     }
-
-    override fun getItemCount() = mUsers.size
 
     class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val mUsernameView = itemView.findViewById<TextView>(R.id.username)

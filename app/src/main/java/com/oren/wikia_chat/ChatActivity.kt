@@ -71,7 +71,6 @@ class ChatActivity : AppCompatActivity() {
         }
 
         mMessagesView = findViewById<RecyclerView>(R.id.messages).apply {
-            setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = mChatAdapter
         }
@@ -173,7 +172,8 @@ class ChatActivity : AppCompatActivity() {
         view.findViewById<RecyclerView>(R.id.participants).apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(this@ChatActivity)
-            adapter = UsersAdapter(mRoom.users).apply {
+            adapter = UsersAdapter().apply {
+                submitList(mRoom.users)
                 setOnClickListener { user ->
                     setupBadge()
                     openPrivateChat(user)
@@ -223,7 +223,7 @@ class ChatActivity : AppCompatActivity() {
         val attrs = data.getJSONObject("attrs")
         val user = mRoom.getUser(attrs.getString("name"))
         val message = attrs.getString("text")
-        val last = mChatItems.last()
+        val last = mChatItems.lastOrNull()
         if (last is ChatItem.Message && last.user == user) {
             last.messages.add(message)
             mChatAdapter.notifyItemChanged(mChatItems.size - 1)

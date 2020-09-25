@@ -12,5 +12,6 @@ class User(val name: String, val avatarUri: Uri, room: Room? = null) {
     )
 
     override fun equals(other: Any?) = this === other || (other is User && name == other.name)
+
     override fun hashCode() = name.hashCode()
 }
