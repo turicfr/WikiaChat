@@ -99,18 +99,15 @@ class ChatActivity : AppCompatActivity() {
             sendMessage()
         }
 
-        // TODO: check if should start chat or not better
-        if (wikiId !in (application as ChatApplication).chats) {
-            mRoom.apply {
-                onEvent("join") { data -> runOnUiThread { onJoin(data) } }
-                onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
-                onEvent("part") { data -> runOnUiThread { onLogout(data) } }
-                onEvent("kick") { data -> runOnUiThread { onKick(data) } }
-                onEvent("ban") { data -> runOnUiThread { onBan(data) } }
-                onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
-                onEvent("openPrivateRoom") { data -> runOnUiThread { onOpenPrivateRoom(data) } }
-                connect()
-            }
+        mRoom.apply {
+            onEvent("join") { data -> runOnUiThread { onJoin(data) } }
+            onEvent("logout") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("part") { data -> runOnUiThread { onLogout(data) } }
+            onEvent("kick") { data -> runOnUiThread { onKick(data) } }
+            onEvent("ban") { data -> runOnUiThread { onBan(data) } }
+            onEvent("chat:add") { data -> runOnUiThread { onMessage(data) } }
+            onEvent("openPrivateRoom") { data -> runOnUiThread { onOpenPrivateRoom(data) } }
+            connect()
         }
     }
 
@@ -203,6 +200,7 @@ class ChatActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         (application as ChatApplication).chats[wikiId] = mChatItems
+        mRoom.offEvent("message")
     }
 
     private fun setupBadge() {

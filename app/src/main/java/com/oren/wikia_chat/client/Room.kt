@@ -3,6 +3,7 @@ package com.oren.wikia_chat.client
 import android.net.Uri
 import android.util.Log
 import io.socket.client.Socket
+import io.socket.emitter.Emitter
 import org.json.JSONObject
 
 class Room(
@@ -34,24 +35,19 @@ class Room(
                     .put("command", "initquery")
             )
         }
-        mSocket.on(Socket.EVENT_DISCONNECT) { Log.d("Room", "disconnect") }
-        mSocket.on(Socket.EVENT_CONNECT_ERROR) { Log.d("Room", "connect_error") }
-        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT) { Log.d("Room", "connect_timeout") }
-        onEvent("initial", ::onInitial)
-        onEvent("join") { data -> updateUser(data.getJSONObject("attrs")) }
-        onEvent("updateUser") { data -> updateUser(data.getJSONObject("attrs")) }
-        onEvent("chat:add") { onMessage() }
-        onEvent("part") { data -> onLogout(data.getJSONObject("attrs")) }
-        onEvent("logout") { data -> onLogout(data.getJSONObject("attrs")) }
+            .on(Socket.EVENT_DISCONNECT) { Log.d("Room", "disconnect") }
+            .on(Socket.EVENT_CONNECT_ERROR) { Log.d("Room", "connect_error") }
+            .on(Socket.EVENT_CONNECT_TIMEOUT) { Log.d("Room", "connect_timeout") }
+            .on("message", listener)
         mSocket.connect()
     }
 
     fun disconnect() {
         mSocket.disconnect()
-        mSocket.off(Socket.EVENT_CONNECT)
-        mSocket.off(Socket.EVENT_DISCONNECT)
-        mSocket.off(Socket.EVENT_CONNECT_ERROR)
-        mSocket.off(Socket.EVENT_CONNECT_TIMEOUT)
+            .off(Socket.EVENT_CONNECT)
+            .off(Socket.EVENT_DISCONNECT)
+            .off(Socket.EVENT_CONNECT_ERROR)
+            .off(Socket.EVENT_CONNECT_TIMEOUT)
         // TODO: off "message"?
     }
 
@@ -82,12 +78,34 @@ class Room(
         )
     }
 
+    // TODO: remove duplicated code
+    private val listener = Emitter.Listener { args ->
+        val obj = args[0] as JSONObject
+        val data = JSONObject(obj.getString("data"))
+        when (obj.getString("event")) {
+            "initial" -> onInitial(data)
+            "join" -> updateUser(data.getJSONObject("attrs"))
+            "updateUser" -> updateUser(data.getJSONObject("attrs"))
+            "chat:add" -> onMessage()
+            "part" -> onLogout(data.getJSONObject("attrs"))
+            "logout" -> onLogout(data.getJSONObject("attrs"))
+        }
+    }
+
     fun onEvent(event: String, handler: (data: JSONObject) -> Unit) {
         mSocket.on("message") { args ->
             val obj = args[0] as JSONObject
             val data = JSONObject(obj.getString("data"))
             if (obj.getString("event") == event) {
                 handler(data)
+            }
+        }
+    }
+
+    fun offEvent(event: String) {
+        for (i in mSocket.listeners(event)) {
+            if (i != listener) {
+                mSocket.off(event, i)
             }
         }
     }
